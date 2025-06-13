@@ -31,7 +31,7 @@ bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hw
     bool fullscreen, float screenDepth, float screenNear)
 {
     HRESULT result;
-
+    m_vsync_enabled = vsync;
     // 1) DXGI_SWAP_CHAIN_DESC ¼³Á¤
     DXGI_SWAP_CHAIN_DESC swapChainDesc;
     ZeroMemory(&swapChainDesc, sizeof(swapChainDesc));

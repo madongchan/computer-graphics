@@ -1,46 +1,36 @@
-// inputclass.cpp
 #include "inputclass.h"
 #include <windows.h>
 #include <cstring>
 
-// static 멤버 변수 초기화
 bool InputClass::s_currentKeyState[256] = { false };
 bool InputClass::s_prevKeyState[256] = { false };
 bool InputClass::s_initialized = false;
 
-InputClass::InputClass()
-{
-}
+int InputClass::s_mouseX = 0;
+int InputClass::s_mouseY = 0;
+int InputClass::s_prevMouseX = 0;
+int InputClass::s_prevMouseY = 0;
 
-InputClass::InputClass(const InputClass& other)
-{
-}
-
-InputClass::~InputClass()
-{
-}
+InputClass::InputClass() {}
+InputClass::InputClass(const InputClass& other) {}
+InputClass::~InputClass() {}
 
 void InputClass::Initialize()
 {
-    int i;
-    for (i = 0; i < 256; i++)
+    for (int i = 0; i < 256; i++)
     {
         m_keys[i] = false;
     }
-    return;
 }
 
-// 기존 함수들 (호환성을 위해 유지하지만 사용하지 않음)
 void InputClass::KeyDown(unsigned int input)
 {
     m_keys[input] = true;
-    return;
 }
 
 void InputClass::KeyUp(unsigned int input)
 {
     m_keys[input] = false;
-    return;
 }
 
 bool InputClass::IsKeyDown(unsigned int key)
@@ -57,14 +47,21 @@ void InputClass::UpdateKeyStates()
         s_initialized = true;
     }
 
-    // 이전 상태 저장
-    memcpy(s_prevKeyState, s_currentKeyState, sizeof(s_currentKeyState));
-
-    // 현재 상태 업데이트 (GetAsyncKeyState 사용)
     for (int i = 0; i < 256; ++i)
     {
         s_currentKeyState[i] = (GetAsyncKeyState(i) & 0x8000) != 0;
     }
+
+    // Update previous mouse position
+    s_prevMouseX = s_mouseX;
+    s_prevMouseY = s_mouseY;
+
+    // Get current mouse position
+    POINT mousePos;
+    GetCursorPos(&mousePos);
+    ScreenToClient(GetForegroundWindow(), &mousePos);
+    s_mouseX = mousePos.x;
+    s_mouseY = mousePos.y;
 }
 
 bool InputClass::IsAnyKeyPressed()
@@ -81,5 +78,23 @@ bool InputClass::IsAnyKeyPressed()
 
 bool InputClass::IsKeyPressed(unsigned int keyCode)
 {
-    return s_currentKeyState[keyCode] && !s_prevKeyState[keyCode];
+    return s_currentKeyState[keyCode];
+}
+
+void InputClass::UpdateMousePosition(int x, int y)
+{
+    s_prevMouseX = s_mouseX;
+    s_prevMouseY = s_mouseY;
+    s_mouseX = x;
+    s_mouseY = y;
+}
+
+int InputClass::GetMouseDeltaX()
+{
+    return s_mouseX - s_prevMouseX;
+}
+
+int InputClass::GetMouseDeltaY()
+{
+    return s_mouseY - s_prevMouseY;
 }

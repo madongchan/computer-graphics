@@ -67,23 +67,23 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	// Set the initial position of the camera.
-	m_Camera->SetPosition(0.0f, 0.0f, -5.0f);	// for cube
+	m_Camera->SetPosition(0.0f, 0.0f, 0.0f);	// for cube
 //	m_Camera->SetPosition(0.0f, 0.5f, -3.0f);	// for chair
 		
 	// Create the model object.
-	//m_Model = new ModelClass;
-	//if(!m_Model)
-	//{
-	//	return false;
-	//}
+	m_Model = new ModelClass;
+	if(!m_Model)
+	{
+		return false;
+	}
 
 	//// Initialize the model object.
-	//result = m_Model->Initialize(m_D3D->GetDevice(), L"./data/cube.obj", L"./data/seafloor.dds");
-	//if(!result)
-	//{
-	//	MessageBox(hwnd, L"Could not initialize the model object.", L"Error", MB_OK);
-	//	return false;
-	//}
+	result = m_Model->Initialize(m_D3D->GetDevice(), L"./data/cube.obj", L"./data/seafloor.dds");
+	if(!result)
+	{
+		MessageBox(hwnd, L"Could not initialize the model object.", L"Error", MB_OK);
+		return false;
+	}
 
 	// Create the texture shader object.
 	m_TextureShader = new TextureShaderClass;
@@ -236,6 +236,38 @@ bool GraphicsClass::Frame(int fps, float cpuUsage)
 		}
 	}
 
+	// 메인 씬에서만 카메라 이동 처리
+	if (m_SceneState == SceneState::MainScene)
+	{
+
+		const float moveSpeed = 0.1f;
+		const float lookSensitivity = 0.002f;
+
+		// Movement input
+		if (InputClass::IsKeyPressed('W')) {
+			m_Camera->MoveForward(moveSpeed);
+		}
+		if (InputClass::IsKeyPressed('S')) {
+			m_Camera->MoveForward(-moveSpeed);
+		}
+		if (InputClass::IsKeyPressed('A')) {
+			m_Camera->MoveRight(-moveSpeed);
+		}
+		if (InputClass::IsKeyPressed('D')) {
+			m_Camera->MoveRight(moveSpeed);
+		}
+
+		// Mouse look input
+		float deltaX = InputClass::GetMouseDeltaX();
+		float deltaY = InputClass::GetMouseDeltaY();
+		m_Camera->AdjustYaw(deltaX * lookSensitivity);
+		m_Camera->AdjustPitch(deltaY * lookSensitivity);
+
+		// Update camera
+		m_Camera->UpdateCamera();
+
+	}
+
 	// Update the rotation variable each frame.
 	rotation += XM_PI * 0.005f;
 	if (rotation > 360.0f)
@@ -294,12 +326,13 @@ bool GraphicsClass::Render(float rotation)
 		// 게임 씬
 	case SceneState::MainScene:
 		m_D3D->TurnZBufferOff();
-		// Render the background bitmap.
-		result = m_BackGround->Render(m_D3D->GetDeviceContext(), 0, 0);
-		if (!result) return false;
-		// Render the background texture using the texture shader.
-		result = m_TextureShader->Render(m_D3D->GetDeviceContext(), m_BackGround->GetIndexCount(), worldMatrix, viewMatrix, orthoMatrix, m_BackGround->GetTexture());
-		if (!result) return false;
+		m_D3D->EnableAlphaBlending();
+
+		m_BackGround->Render(m_D3D->GetDeviceContext(), 0, 0);
+		m_TextureShader->Render(m_D3D->GetDeviceContext(), m_BackGround->GetIndexCount(),
+			XMMatrixIdentity(), XMMatrixIdentity(), XMMatrixIdentity(), m_BackGround->GetTexture());
+
+		m_D3D->DisableAlphaBlending();
 		m_D3D->TurnZBufferOn();
 
 		// 텍스트 출력 (FPS, CPU)
@@ -321,27 +354,25 @@ bool GraphicsClass::Render(float rotation)
 		m_D3D->TurnZBufferOn();
 
 		// Render the model.
+		// Rotate the world matrix by the rotation value so that the triangle will spin.
+		worldMatrix = XMMatrixRotationY(rotation);
+
+		// Put the model vertex and index buffers on the graphics pipeline to prepare them for drawing.
+		//m_Model->Render(m_D3D->GetDeviceContext());
+
+		// Render the model using the texture shader.
+		//result = m_TextureShader->Render(m_D3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, m_Model->GetTexture());
+
+
+		if (!result)
+		{
+			return false;
+		}
+
+		// Present the rendered scene to the screen.
 		break;
 	}
 	
-
-	// Rotate the world matrix by the rotation value so that the triangle will spin.
-	worldMatrix = XMMatrixRotationY(rotation);
-
-	// Put the model vertex and index buffers on the graphics pipeline to prepare them for drawing.
-	//m_Model->Render(m_D3D->GetDeviceContext());
-
-	// Render the model using the texture shader.
-	//result = m_TextureShader->Render(m_D3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, m_Model->GetTexture());
-
-	
-	if(!result)
-	{
-		return false;
-	}
-
-	// Present the rendered scene to the screen.
 	m_D3D->EndScene();
-
 	return true;
 }
