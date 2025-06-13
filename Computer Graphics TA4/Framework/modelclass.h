@@ -65,6 +65,10 @@ public:
 	int GetIndexCount();
 	ID3D11ShaderResourceView* GetTexture();
 
+	ID3D11Buffer* GetVertexBuffer() { return m_vertexBuffer; }
+	ID3D11Buffer* GetIndexBuffer() { return m_indexBuffer; }
+	int GetVertexCount() { return m_vertexCount; }
+
 	bool LoadModel(const WCHAR*);
 	void ReleaseModel();
 

@@ -20,7 +20,7 @@ using namespace DirectX;
 #include "fpsclass.h"
 #include "cpuclass.h"
 #include "bitmapclass.h"
-//#include "billboardclass.h"
+#include "ModelManager.h"  // 새로 추가
 
 /////////////
 // GLOBALS //
@@ -31,9 +31,18 @@ const float SCREEN_DEPTH = 1000.0f;
 const float SCREEN_NEAR = 0.1f;
 
 enum class SceneState {
-	TITLE,
-	Tutorial,
-	MainScene
+    TITLE,
+    Tutorial,
+    MainScene
+};
+
+// 개별 오브젝트 변환 정보 구조체
+struct ObjectTransform {
+    XMMATRIX worldMatrix;
+    ModelType modelType;
+    XMFLOAT3 velocity;
+    XMFLOAT3 rotationSpeed;
+    bool isAnimated;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -42,37 +51,57 @@ enum class SceneState {
 class GraphicsClass
 {
 public:
-	GraphicsClass();
-	GraphicsClass(const GraphicsClass&);
-	~GraphicsClass();
+    GraphicsClass();
+    GraphicsClass(const GraphicsClass&);
+    ~GraphicsClass();
 
-	bool Initialize(int, int, HWND);
-	void Shutdown();
-	bool Frame(int, float);
+    bool Initialize(int, int, HWND);
+    void Shutdown();
+    bool Frame(int, float);
 
-	D3DClass* GetD3D() { return m_D3D; }
-
-private:
-	bool Render(float);
+    D3DClass* GetD3D() { return m_D3D; }
 
 private:
-	SceneState m_SceneState;
-	D3DClass* m_D3D;
-	CameraClass* m_Camera;
-	ModelClass* m_Model;
+    bool Render(float);
+    bool InitializeModels(ID3D11Device* device, HWND hwnd);
+    void InitializeInstances();
+    void InitializeIndividualObjects();
+    void UpdateAnimations(float deltaTime);
+    void RenderInstancedObjects(XMMATRIX& viewMatrix, XMMATRIX& projectionMatrix);
+    void RenderIndividualObjects(XMMATRIX& viewMatrix, XMMATRIX& projectionMatrix);
 
-	TextureShaderClass* m_TextureShader;
-	BitmapClass* m_BackGround;
-	BitmapClass* m_TitleScreen;
-	BitmapClass* m_TutorialScreen;
+private:
+    SceneState m_SceneState;
+    D3DClass* m_D3D;
+    CameraClass* m_Camera;
+    ModelClass* m_Model;
 
-	TextClass* m_Text;
+    TextureShaderClass* m_TextureShader;
+    BitmapClass* m_BackGround;
+    BitmapClass* m_TitleScreen;
+    BitmapClass* m_TutorialScreen;
 
-	int m_FPS;
-	float m_CPUUsage;
-	int m_PolygonCount;
-	float m_ScreenWidth;
-	float m_ScreenHeight;
+    TextClass* m_Text;
+
+    // 모델 관리
+    ModelManager* m_ModelManager;
+
+    // 인스턴싱 데이터
+    std::vector<XMMATRIX> m_RoadInstances;
+    std::vector<XMMATRIX> m_TreeInstances;
+
+    // 개별 오브젝트들
+    std::vector<ObjectTransform> m_IndividualObjects;
+
+    // 애니메이션
+    float m_AnimationTime;
+    float m_LastFrameTime;
+
+    int m_FPS;
+    float m_CPUUsage;
+    int m_PolygonCount;
+    float m_ScreenWidth;
+    float m_ScreenHeight;
 };
 
 #endif

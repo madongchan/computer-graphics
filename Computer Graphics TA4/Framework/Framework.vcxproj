@@ -149,6 +149,7 @@
     <ClCompile Include="inputclass.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="modelclass.cpp" />
+    <ClCompile Include="ModelManager.cpp" />
     <ClCompile Include="systemclass.cpp" />
     <ClCompile Include="textclass.cpp" />
     <ClCompile Include="textureclass.cpp" />
@@ -166,6 +167,7 @@
     <ClInclude Include="graphicsclass.h" />
     <ClInclude Include="inputclass.h" />
     <ClInclude Include="modelclass.h" />
+    <ClInclude Include="ModelManager.h" />
     <ClInclude Include="systemclass.h" />
     <ClInclude Include="textclass.h" />
     <ClInclude Include="textureclass.h" />
@@ -174,7 +176,8 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="data\bluesky.dds" />
-    <Image Include="data\seafloor.dds" />
+    <Image Include="data\PolygonBattleRoyale_Road_01.dds" />
+    <Image Include="data\PolygonBattleRoyale_Texture_01_A.dds" />
     <Image Include="data\Title.dds" />
     <Image Include="data\Tutorial.dds" />
   </ItemGroup>
