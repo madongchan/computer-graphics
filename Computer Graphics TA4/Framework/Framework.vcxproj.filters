@@ -56,6 +56,9 @@
     <ClCompile Include="textclass.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="ModelManager.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="d3dclass.h">
@@ -103,18 +106,24 @@
     <ClInclude Include="textclass.h">
       <Filter>소스 파일</Filter>
     </ClInclude>
+    <ClInclude Include="ModelManager.h">
+      <Filter>소스 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="data\seafloor.dds">
-      <Filter>리소스 파일</Filter>
-    </Image>
-    <Image Include="data\bluesky.dds">
-      <Filter>리소스 파일</Filter>
-    </Image>
     <Image Include="data\Title.dds">
       <Filter>리소스 파일</Filter>
     </Image>
     <Image Include="data\Tutorial.dds">
+      <Filter>리소스 파일</Filter>
+    </Image>
+    <Image Include="data\PolygonBattleRoyale_Road_01.dds">
+      <Filter>리소스 파일</Filter>
+    </Image>
+    <Image Include="data\PolygonBattleRoyale_Texture_01_A.dds">
+      <Filter>리소스 파일</Filter>
+    </Image>
+    <Image Include="data\BackGround.dds">
       <Filter>리소스 파일</Filter>
     </Image>
   </ItemGroup>

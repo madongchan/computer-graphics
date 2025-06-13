@@ -96,7 +96,7 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
     // 배경 화면들 초기화 (기존 코드와 동일)
     m_BackGround = new BitmapClass;
     if (!m_BackGround) return false;
-    result = m_BackGround->Initialize(m_D3D->GetDevice(), screenWidth, screenHeight, L"./data/bluesky.dds", screenWidth, screenHeight);
+    result = m_BackGround->Initialize(m_D3D->GetDevice(), screenWidth, screenHeight, L"./data/BackGround.dds", screenWidth, screenHeight);
     if (!result)
     {
         MessageBox(hwnd, L"Could not initialize the background bitmap object.", L"Error", MB_OK);
@@ -453,16 +453,16 @@ bool GraphicsClass::Frame(int fps, float cpuUsage)
         const float lookSensitivity = 0.002f;
 
         // Movement input
-        if (InputClass::IsKeyPressed('W')) {
+        if (InputClass::IsKeyPressed('W') || InputClass::IsKeyPressed(VK_UP)) {
             m_Camera->MoveForward(moveSpeed);
         }
-        if (InputClass::IsKeyPressed('S')) {
+        if (InputClass::IsKeyPressed('S') || InputClass::IsKeyPressed(VK_DOWN)) {
             m_Camera->MoveForward(-moveSpeed);
         }
-        if (InputClass::IsKeyPressed('A')) {
+        if (InputClass::IsKeyPressed('A') || InputClass::IsKeyPressed(VK_LEFT)) {
             m_Camera->MoveRight(-moveSpeed);
         }
-        if (InputClass::IsKeyPressed('D')) {
+        if (InputClass::IsKeyPressed('D') || InputClass::IsKeyPressed(VK_RIGHT)) {
             m_Camera->MoveRight(moveSpeed);
         }
 

@@ -175,7 +175,7 @@
     <ClInclude Include="timerclass.h" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="data\bluesky.dds" />
+    <Image Include="data\BackGround.dds" />
     <Image Include="data\PolygonBattleRoyale_Road_01.dds" />
     <Image Include="data\PolygonBattleRoyale_Texture_01_A.dds" />
     <Image Include="data\Title.dds" />
