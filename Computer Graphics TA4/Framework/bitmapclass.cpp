@@ -251,23 +251,23 @@ bool BitmapClass::UpdateBuffers(ID3D11DeviceContext* deviceContext, int position
 
 	// Load the vertex array with data.
 	// First triangle.
-	vertices[0].position = XMFLOAT3(left, top, 0.0f);  // Top left.
+	vertices[0].position = XMFLOAT3(left, top, 0.5f);  // Top left.  <-- Z-값 변경
 	vertices[0].texture = XMFLOAT2(0.0f, 0.0f);
 
-	vertices[1].position = XMFLOAT3(right, bottom, 0.0f);  // Bottom right.
+	vertices[1].position = XMFLOAT3(right, bottom, 0.5f);  // Bottom right. <-- Z-값 변경
 	vertices[1].texture = XMFLOAT2(1.0f, 1.0f);
 
-	vertices[2].position = XMFLOAT3(left, bottom, 0.0f);  // Bottom left.
+	vertices[2].position = XMFLOAT3(left, bottom, 0.5f);  // Bottom left. <-- Z-값 변경
 	vertices[2].texture = XMFLOAT2(0.0f, 1.0f);
 
 	// Second triangle.
-	vertices[3].position = XMFLOAT3(left, top, 0.0f);  // Top left.
+	vertices[3].position = XMFLOAT3(left, top, 0.5f);  // Top left. <-- Z-값 변경
 	vertices[3].texture = XMFLOAT2(0.0f, 0.0f);
 
-	vertices[4].position = XMFLOAT3(right, top, 0.0f);  // Top right.
+	vertices[4].position = XMFLOAT3(right, top, 0.5f);  // Top right. <-- Z-값 변경
 	vertices[4].texture = XMFLOAT2(1.0f, 0.0f);
 
-	vertices[5].position = XMFLOAT3(right, bottom, 0.0f);  // Bottom right.
+	vertices[5].position = XMFLOAT3(right, bottom, 0.5f);  // Bottom right. <-- Z-값 변경
 	vertices[5].texture = XMFLOAT2(1.0f, 1.0f);
 
 	// Lock the vertex buffer so it can be written to.

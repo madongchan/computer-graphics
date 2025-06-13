@@ -70,20 +70,20 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	m_Camera->SetPosition(0.0f, 0.0f, 0.0f);	// for cube
 //	m_Camera->SetPosition(0.0f, 0.5f, -3.0f);	// for chair
 		
-	// Create the model object.
-	m_Model = new ModelClass;
-	if(!m_Model)
-	{
-		return false;
-	}
+	//// Create the model object.
+	//m_Model = new ModelClass;
+	//if(!m_Model)
+	//{
+	//	return false;
+	//}
 
-	//// Initialize the model object.
-	result = m_Model->Initialize(m_D3D->GetDevice(), L"./data/cube.obj", L"./data/seafloor.dds");
-	if(!result)
-	{
-		MessageBox(hwnd, L"Could not initialize the model object.", L"Error", MB_OK);
-		return false;
-	}
+	////// Initialize the model object.
+	//result = m_Model->Initialize(m_D3D->GetDevice(), L"./data/cube.obj", L"./data/seafloor.dds");
+	//if(!result)
+	//{
+	//	MessageBox(hwnd, L"Could not initialize the model object.", L"Error", MB_OK);
+	//	return false;
+	//}
 
 	// Create the texture shader object.
 	m_TextureShader = new TextureShaderClass;
@@ -326,13 +326,12 @@ bool GraphicsClass::Render(float rotation)
 		// 게임 씬
 	case SceneState::MainScene:
 		m_D3D->TurnZBufferOff();
-		m_D3D->EnableAlphaBlending();
-
 		m_BackGround->Render(m_D3D->GetDeviceContext(), 0, 0);
-		m_TextureShader->Render(m_D3D->GetDeviceContext(), m_BackGround->GetIndexCount(),
-			XMMatrixIdentity(), XMMatrixIdentity(), XMMatrixIdentity(), m_BackGround->GetTexture());
 
-		m_D3D->DisableAlphaBlending();
+		// 배경은 카메라 움직임에 영향을 받지 않도록 viewMatrix 대신 항등 행렬을 사용합니다.
+		XMMATRIX identityMatrix = XMMatrixIdentity();
+		m_TextureShader->Render(m_D3D->GetDeviceContext(), m_BackGround->GetIndexCount(),
+			worldMatrix, identityMatrix, orthoMatrix, m_BackGround->GetTexture());
 		m_D3D->TurnZBufferOn();
 
 		// 텍스트 출력 (FPS, CPU)

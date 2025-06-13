@@ -48,6 +48,11 @@ private:
 		float nx, ny, nz;
 	};
 
+	struct InstanceType
+	{
+		XMFLOAT4X4 world;
+	};
+
 public:
 	ModelClass();
 	ModelClass(const ModelClass&);
