@@ -15,6 +15,10 @@
 #include "textureshaderclass.h"
 #include "bitmapclass.h"
 
+#include "textclass.h"
+#include "fpsclass.h"
+#include "cpuclass.h"
+
 /////////////
 // GLOBALS //
 /////////////
@@ -41,7 +45,9 @@ public:
 
 	bool Initialize(int, int, HWND);
 	void Shutdown();
-	bool Frame();
+	bool Frame(int, float);
+
+	D3DClass* GetD3D() { return m_D3D; }
 
 private:
 	bool Render(float);
@@ -56,6 +62,14 @@ private:
 	BitmapClass* m_BackGround;
 	BitmapClass* m_TitleScreen;
 	BitmapClass* m_TutorialScreen;
+
+	TextClass* m_Text;
+
+	int m_FPS;
+	float m_CPUUsage;
+	int m_PolygonCount;
+	float m_ScreenWidth;
+	float m_ScreenHeight;
 };
 
 #endif

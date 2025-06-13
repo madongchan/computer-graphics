@@ -22,6 +22,9 @@
 ///////////////////////
 #include "inputclass.h"
 #include "graphicsclass.h"
+#include "TimerClass.h"
+#include "FPSClass.h"
+#include "CPUClass.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -52,6 +55,13 @@ private:
 
 	InputClass* m_Input;
 	GraphicsClass* m_Graphics;
+
+	TextureShaderClass* m_TextureShader;
+	D3DClass* m_D3D;
+
+	TimerClass* m_Timer;
+	FPSClass* m_FPS;
+	CPUClass* m_CPU;
 };
 
 

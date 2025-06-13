@@ -36,22 +36,30 @@ public:
 
 	bool Initialize(int, int, bool, HWND, bool, float, float);
 	void Shutdown();
-	
+
 	void BeginScene(float, float, float, float);
 	void EndScene();
 
 	ID3D11Device* GetDevice();
 	ID3D11DeviceContext* GetDeviceContext();
 
-	void GetProjectionMatrix(XMMATRIX&);
+	//void GetProjectionMatrix(XMMATRIX&);
 	void GetWorldMatrix(XMMATRIX&);
 	void GetOrthoMatrix(XMMATRIX&);
 
 	void GetVideoCardInfo(char*, int&);
 
+	ID3D11Device* GetDevice() const { return m_device; }
+	ID3D11DeviceContext* GetDeviceContext() const { return m_deviceContext; }
+	IDXGISwapChain* GetSwapChain() { return m_swapChain; }
+	IDXGISwapChain* GetSwapChain() const { return m_swapChain; }
+
+	void GetProjectionMatrix(XMMATRIX& projectionMatrix);
+
 	void TurnZBufferOn();
 	void TurnZBufferOff();
-
+	void EnableAlphaBlending();
+	void DisableAlphaBlending();
 private:
 	bool m_vsync_enabled;
 	int m_videoCardMemory;
@@ -69,6 +77,9 @@ private:
 	XMMATRIX m_orthoMatrix;
 
 	ID3D11DepthStencilState* m_depthDisabledStencilState;
+
+	ID3D11BlendState* m_alphaEnableBlendingState;
+	ID3D11BlendState* m_alphaDisableBlendingState;
 };
 
 #endif

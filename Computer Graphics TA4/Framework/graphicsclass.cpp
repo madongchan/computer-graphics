@@ -15,6 +15,16 @@ GraphicsClass::GraphicsClass()
 	m_BackGround = 0;
 	m_TitleScreen = 0;
 	m_TutorialScreen = 0;
+
+	m_Text = 0;
+
+	// Initialize the scene state
+	m_FPS = 0;
+	m_CPUUsage = 0.0f;
+	m_PolygonCount = 0;
+	m_ScreenWidth = 0;  // 기본 화면 너비
+	m_ScreenHeight = 0;  // 기본 화면 높이
+	m_SceneState = SceneState::MainScene;
 }
 
 
@@ -31,8 +41,9 @@ GraphicsClass::~GraphicsClass()
 bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 {
 	bool result;
-	m_SceneState = SceneState::TITLE; // Initialize the scene state to TitleScreen
 
+	m_ScreenWidth = screenWidth;  // 화면 너비 설정
+	m_ScreenHeight = screenHeight;  // 화면 높이 설정
 	// Create the Direct3D object.
 	m_D3D = new D3DClass;
 	if(!m_D3D)
@@ -125,12 +136,30 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		return false;
 	}
 
+	m_Text = new TextClass;
+	if (!m_Text) return false;
+
+	result = m_Text->Initialize(
+		m_D3D->GetDevice(),      // ID3D11Device*
+		m_D3D->GetSwapChain()    // IDXGISwapChain*
+	);
+	if (!result)
+	{
+		MessageBox(hwnd, L"Could not initialize TextClass.", L"Error", MB_OK);
+		return false;
+	}
 	return true;
 }
 
 
 void GraphicsClass::Shutdown()
 {
+	if (m_Text)
+	{
+		m_Text->Shutdown();
+		delete m_Text;
+		m_Text = nullptr;
+	}
 	// Release the model object.
 	if(m_Model)
 	{
@@ -184,10 +213,12 @@ void GraphicsClass::Shutdown()
 	return;
 }
 
-bool GraphicsClass::Frame()
+bool GraphicsClass::Frame(int fps, float cpuUsage)
 {
 	bool result = true;
 
+	m_FPS = fps;  // FPS 업데이트
+	m_CPUUsage = cpuUsage;  // CPU 사용률 업데이트
 	static float rotation = 0.0f;
 
 	// 키 상태 업데이트 (매 프레임마다 호출)
@@ -269,6 +300,24 @@ bool GraphicsClass::Render(float rotation)
 		// Render the background texture using the texture shader.
 		result = m_TextureShader->Render(m_D3D->GetDeviceContext(), m_BackGround->GetIndexCount(), worldMatrix, viewMatrix, orthoMatrix, m_BackGround->GetTexture());
 		if (!result) return false;
+		m_D3D->TurnZBufferOn();
+
+		// 텍스트 출력 (FPS, CPU)
+		wchar_t fpsText[64], cpuText[64], foundText[64], objectText[64], polyText[64], resolText[64];
+		swprintf_s(fpsText, 64, L"FPS: %d", m_FPS);
+		swprintf_s(cpuText, 64, L"CPU: %d%%", static_cast<int>(m_CPUUsage));
+		swprintf_s(polyText, 64, L"POLYGON: %d", m_PolygonCount);
+		swprintf_s(resolText, 64, L"RESOLUTION: %d X %d", static_cast<int>(m_ScreenWidth), static_cast<int>(m_ScreenHeight));
+		
+		m_D3D->TurnZBufferOff();
+		m_D3D->EnableAlphaBlending();
+
+		m_Text->DrawTextLine(fpsText, 10.0f, 0.0f);
+		m_Text->DrawTextLine(cpuText, 10.0f, 11.0f);
+		m_Text->DrawTextLine(polyText, 10.0f, 22.0f);
+		m_Text->DrawTextLine(resolText, 10.0f, 33.0f);
+
+		m_D3D->DisableAlphaBlending();
 		m_D3D->TurnZBufferOn();
 
 		// Render the model.

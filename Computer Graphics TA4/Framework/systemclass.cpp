@@ -8,6 +8,9 @@ SystemClass::SystemClass()
 {
 	m_Input = 0;
 	m_Graphics = 0;
+	m_Timer = 0;
+	m_FPS = 0;
+	m_CPU = 0;
 }
 
 
@@ -34,29 +37,30 @@ bool SystemClass::Initialize()
 	// Initialize the windows api.
 	InitializeWindows(screenWidth, screenHeight);
 
+	m_Timer = new TimerClass;
+	if (!m_Timer) return false;
+	m_Timer->Initialize();
+
+	m_FPS = new FPSClass;
+	if (!m_FPS) return false;
+	m_FPS->Initialize(m_Timer);
+
+	m_CPU = new CPUClass;
+	if (!m_CPU) return false;
+	m_CPU->Initialize();
+
 	// Create the input object.  This object will be used to handle reading the keyboard input from the user.
 	m_Input = new InputClass;
-	if(!m_Input)
-	{
-		return false;
-	}
+	if(!m_Input) return false;
 
 	// Initialize the input object.
 	m_Input->Initialize();
 
 	// Create the graphics object.  This object will handle rendering all the graphics for this application.
 	m_Graphics = new GraphicsClass;
-	if(!m_Graphics)
-	{
-		return false;
-	}
-
-	// Initialize the graphics object.
+	if(!m_Graphics) return false;
 	result = m_Graphics->Initialize(screenWidth, screenHeight, m_hwnd);
-	if(!result)
-	{
-		return false;
-	}
+	if(!result) return false;
 	
 	return true;
 }
@@ -130,7 +134,10 @@ void SystemClass::Run()
 bool SystemClass::Frame()
 {
 	bool result;
-
+	
+	// Update the FPS and CPU classes with the time since the last frame.
+	m_FPS->Frame();
+	m_CPU->Frame();
 
 	// Check if the user pressed escape and wants to exit the application.
 	if(m_Input->IsKeyDown(VK_ESCAPE))
@@ -138,8 +145,9 @@ bool SystemClass::Frame()
 		return false;
 	}
 
+	
 	// Do the frame processing for the graphics object.
-	result = m_Graphics->Frame();
+	result = m_Graphics->Frame(m_FPS->GetFPS(), m_CPU->GetCPUPercent());
 	if(!result)
 	{
 		return false;
