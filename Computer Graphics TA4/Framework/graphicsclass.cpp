@@ -12,7 +12,9 @@ GraphicsClass::GraphicsClass()
 	m_Model = 0;
 
 	m_TextureShader = 0;
+	m_BackGround = 0;
 	m_TitleScreen = 0;
+	m_TutorialScreen = 0;
 }
 
 
@@ -58,19 +60,19 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 //	m_Camera->SetPosition(0.0f, 0.5f, -3.0f);	// for chair
 		
 	// Create the model object.
-	m_Model = new ModelClass;
-	if(!m_Model)
-	{
-		return false;
-	}
+	//m_Model = new ModelClass;
+	//if(!m_Model)
+	//{
+	//	return false;
+	//}
 
-	// Initialize the model object.
-	result = m_Model->Initialize(m_D3D->GetDevice(), L"./data/cube.obj", L"./data/seafloor.dds");
-	if(!result)
-	{
-		MessageBox(hwnd, L"Could not initialize the model object.", L"Error", MB_OK);
-		return false;
-	}
+	//// Initialize the model object.
+	//result = m_Model->Initialize(m_D3D->GetDevice(), L"./data/cube.obj", L"./data/seafloor.dds");
+	//if(!result)
+	//{
+	//	MessageBox(hwnd, L"Could not initialize the model object.", L"Error", MB_OK);
+	//	return false;
+	//}
 
 	// Create the texture shader object.
 	m_TextureShader = new TextureShaderClass;
@@ -87,6 +89,15 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		return false;
 	}
 
+	// ¸ÞÀÎ ¾ÀÀÇ ¹è°æ È­¸é
+	m_BackGround = new BitmapClass;
+	if (!m_BackGround) return false;
+	result = m_BackGround->Initialize(m_D3D->GetDevice(), screenWidth, screenHeight, L"./data/bluesky.dds", screenWidth, screenHeight);
+	if (!result)
+	{
+		MessageBox(hwnd, L"Could not initialize the background bitmap object.", L"Error", MB_OK);
+		return false;
+	}
 
 	// Å¸ÀÌÆ² ¾À È­¸é
 	m_TitleScreen = new BitmapClass;
@@ -143,6 +154,12 @@ void GraphicsClass::Shutdown()
 		m_D3D = 0;
 	}
 
+	if (m_BackGround)
+	{
+		m_BackGround->Shutdown();
+		delete m_BackGround;
+		m_BackGround = 0;
+	}
 	if (m_TitleScreen)
 	{
 		m_TitleScreen->Shutdown();
@@ -222,32 +239,42 @@ bool GraphicsClass::Render(float rotation)
 
 	m_D3D->GetOrthoMatrix(orthoMatrix);
 
-	// Turn off the Z buffer to begin all 2D rendering.
-	m_D3D->TurnZBufferOff();
 	// ¾À »óÅÂ¿¡ µû¶ó ´Ù¸¥ È­¸éÀ» ·»´õ¸µ
 	switch (m_SceneState)
 	{
 		// Å¸ÀÌÆ² ¾À
 	case SceneState::TITLE:
+		m_D3D->TurnZBufferOff();
 		result = m_TitleScreen->Render(m_D3D->GetDeviceContext(), 0, 0);
 		if (!result) return false;
 		result = m_TextureShader->Render(m_D3D->GetDeviceContext(), m_TitleScreen->GetIndexCount(), worldMatrix, viewMatrix, orthoMatrix, m_TitleScreen->GetTexture());
 		if (!result) return false;
+		m_D3D->TurnZBufferOn();
 		break;
 		// Æ©Åä¸®¾ó ¾À
 	case SceneState::Tutorial:
+		m_D3D->TurnZBufferOff();
 		result = m_TutorialScreen->Render(m_D3D->GetDeviceContext(), 0, 0);
 		if (!result) return false;
 		result = m_TextureShader->Render(m_D3D->GetDeviceContext(), m_TutorialScreen->GetIndexCount(), worldMatrix, viewMatrix, orthoMatrix, m_TutorialScreen->GetTexture());
 		if (!result) return false;
+		m_D3D->TurnZBufferOn();
 		break;
 		// °ÔÀÓ ¾À
 	case SceneState::MainScene:
+		m_D3D->TurnZBufferOff();
+		// Render the background bitmap.
+		result = m_BackGround->Render(m_D3D->GetDeviceContext(), 0, 0);
+		if (!result) return false;
+		// Render the background texture using the texture shader.
+		result = m_TextureShader->Render(m_D3D->GetDeviceContext(), m_BackGround->GetIndexCount(), worldMatrix, viewMatrix, orthoMatrix, m_BackGround->GetTexture());
+		if (!result) return false;
+		m_D3D->TurnZBufferOn();
+
+		// Render the model.
 		break;
 	}
-
-	// Turn the Z buffer back on now that all 2D rendering has completed.
-	m_D3D->TurnZBufferOn();
+	
 
 	// Rotate the world matrix by the rotation value so that the triangle will spin.
 	worldMatrix = XMMatrixRotationY(rotation);

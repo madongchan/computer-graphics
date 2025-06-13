@@ -53,6 +53,7 @@ private:
 	ModelClass* m_Model;
 
 	TextureShaderClass* m_TextureShader;
+	BitmapClass* m_BackGround;
 	BitmapClass* m_TitleScreen;
 	BitmapClass* m_TutorialScreen;
 };
