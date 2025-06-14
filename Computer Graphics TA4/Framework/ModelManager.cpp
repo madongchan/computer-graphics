@@ -73,14 +73,14 @@ void ModelManager::InitializeModelPaths() {
     m_ModelPaths = {
         L"./data/SM_Env_Road_Cross_01.obj",      // ROAD
         L"./data/SM_Generic_Tree_02.obj",      // TREE
-        L"./data/SM_Generic_Tree_02.obj",    // PERSON
-        L"./data/SM_Env_Road_Cross_01.obj",  // BUILDING
-        L"./data/SM_Generic_Tree_02.obj",       // CAR
-        L"./data/SM_Generic_Tree_02.obj",      // BIKE
-        L"./data/SM_Generic_Tree_02.obj",      // WALL
-        L"./data/SM_Generic_Tree_02.obj",      // LAMP
-        L"./data/SM_Generic_Tree_02.obj",     // FENCE
-        L"./data/SM_Generic_Tree_02.obj"       // SIGN
+        L"./data/Character_MilitaryMale_01.obj",    // PERSON
+        L"./data/SM_Bld_Tent_02.obj",  // BUILDING
+        L"./data/SM_Veh_Car_Clean_01.obj",       // CAR
+        L"./data/SM_Veh_Bike_01.obj",      // BIKE
+        L"./data/SM_Prop_Range_Wall_Window_01.obj",      // WALL
+        L"./data/SM_Prop_TireStack_01.obj",      // TireStack
+        L"./data/SM_Prop_Barricade_01.obj",     // FENCE
+        L"./data/SM_Prop_Spotlight_01.obj"       // SIGN
     };
 
     // 텍스처 파일 경로들
@@ -88,11 +88,11 @@ void ModelManager::InitializeModelPaths() {
         L"./data/PolygonBattleRoyale_Road_01.dds",      // ROAD
         L"./data/PolygonBattleRoyale_Texture_01_A.dds",      // TREE
         L"./data/PolygonBattleRoyale_Texture_01_A.dds",    // PERSON
-        L"./data/PolygonBattleRoyale_Road_01.dds",  // BUILDING
-        L"./data/PolygonBattleRoyale_Texture_01_A.dds",       // CAR
-        L"./data/PolygonBattleRoyale_Texture_01_A.dds",      // BIKE
+        L"./data/PolygonBattleRoyale_Texture_01_A.dds",  // BUILDING
+        L"./data/PolygonBattleRoyale_Vehicles_01.dds",       // CAR
+        L"./data/PolygonBattleRoyale_Vehicles_01.dds",      // BIKE
         L"./data/PolygonBattleRoyale_Texture_01_A.dds",      // WALL
-        L"./data/PolygonBattleRoyale_Texture_01_A.dds",      // LAMP
+        L"./data/PolygonBattleRoyale_Texture_01_A.dds",      // TireStack
         L"./data/PolygonBattleRoyale_Texture_01_A.dds",     // FENCE
         L"./data/PolygonBattleRoyale_Texture_01_A.dds"       // SIGN
     };

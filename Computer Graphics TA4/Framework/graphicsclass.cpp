@@ -180,9 +180,9 @@ void GraphicsClass::InitializeInstances()
         int z = i / roadGridSize;
 
         XMMATRIX roadMatrix = XMMatrixTranslation(
-            x * 10.0f - roadGridSize * 5.0f,
+            x * 20.0f - roadGridSize * 5.0f,
             0.0f,
-            z * 10.0f - roadGridSize * 5.0f
+            z * 20.0f - roadGridSize * 5.0f
         );
         m_RoadInstances.push_back(roadMatrix);
     }
@@ -222,32 +222,55 @@ void GraphicsClass::InitializeIndividualObjects()
 
     // 건물 오브젝트 - Y축 회전 애니메이션
     ObjectTransform building;
-    building.worldMatrix = XMMatrixTranslation(0.0f, 0.0f, -25.0f);
+    XMMATRIX scaleBuildMatrix = XMMatrixScaling(0.5f, 0.5f, 0.5f);
+    building.worldMatrix = scaleBuildMatrix * XMMatrixTranslation(35.0f, 9.0f, 35.0f);
     building.modelType = ModelType::BUILDING;
-    building.velocity = XMFLOAT3(0.0f, 0.0f, 0.0f);
-    building.rotationSpeed = XMFLOAT3(0.0f, 5.0f, 0.0f);
     building.isAnimated = true;
     m_IndividualObjects.push_back(building);
 
     // 정적 오브젝트들 추가
+
+	// 오토바이 오브젝트
     ObjectTransform bike;
     bike.worldMatrix = XMMatrixTranslation(-15.0f, 0.0f, 5.0f);
     bike.modelType = ModelType::BIKE;
     bike.isAnimated = false;
     m_IndividualObjects.push_back(bike);
 
+	// 벽 오브젝트
     ObjectTransform wall;
     wall.worldMatrix = XMMatrixTranslation(30.0f, 0.0f, 0.0f);
     wall.modelType = ModelType::WALL;
     wall.isAnimated = false;
     m_IndividualObjects.push_back(wall);
+
+	// TireStack 오브젝트
+    ObjectTransform tireStack;
+    tireStack.worldMatrix = XMMatrixTranslation(-30.0f, 0.0f, -10.0f);
+    tireStack.modelType = ModelType::TIRESTACK;
+    tireStack.isAnimated = false;
+	m_IndividualObjects.push_back(tireStack);
+
+	// FENCE 오브젝트
+    ObjectTransform fence;
+    fence.worldMatrix = XMMatrixTranslation(0.0f, 0.0f, 30.0f);
+    fence.modelType = ModelType::FENCE;
+    fence.isAnimated = false;
+	m_IndividualObjects.push_back(fence);
+
+	// SIGN 오브젝트
+    ObjectTransform sign;
+    sign.worldMatrix = XMMatrixTranslation(0.0f, 0.0f, 50.0f);
+    sign.modelType = ModelType::SIGN;
+	sign.isAnimated = false;
+	m_IndividualObjects.push_back(sign);
 }
 
 void GraphicsClass::UpdateAnimations(float deltaTime)
 {
     m_AnimationTime += deltaTime;
 
-    for (size_t i = 0; i < m_IndividualObjects.size() && i < 3; i++)
+    for (size_t i = 0; i < m_IndividualObjects.size(); i++)
     {
         if (!m_IndividualObjects[i].isAnimated) continue;
 
@@ -258,9 +281,8 @@ void GraphicsClass::UpdateAnimations(float deltaTime)
             float radius = 20.0f;
             float speed = 1.0f;
             float angle = m_AnimationTime * speed;
-            m_IndividualObjects[i].worldMatrix = XMMatrixTranslation(
-                cos(angle) * radius, 0.0f, sin(angle) * radius
-            );
+            m_IndividualObjects[i].worldMatrix = 
+                XMMatrixTranslation(cos(angle) * radius, 0.0f, sin(angle) * radius);
         }
         break;
 
@@ -275,12 +297,12 @@ void GraphicsClass::UpdateAnimations(float deltaTime)
         }
         break;
 
-        case 2: // 건물 - Y축 회전
+        case 9: // SIGN - Y축 회전
         {
-            float rotationSpeed = 5.0f;
+            float rotationSpeed = 3.0f;
             m_IndividualObjects[i].worldMatrix =
                 XMMatrixRotationY(m_AnimationTime * rotationSpeed) *
-                XMMatrixTranslation(0.0f, 0.0f, 25.0f);
+                XMMatrixTranslation(0.0f, 20.0f, 25.0f);
         }
         break;
         }
@@ -292,7 +314,7 @@ void GraphicsClass::UpdateAnimations(float deltaTime)
 void GraphicsClass::RenderInstancedObjects(XMMATRIX& viewMatrix, XMMATRIX& projectionMatrix)
 {
     // 스케일링 행렬 생성
-    XMMATRIX scaleMatrix = XMMatrixScaling(0.01f, 0.01f, 0.01f);
+    XMMATRIX scaleMatrix = XMMatrixScaling(0.02f, 0.02f, 0.02f);
 
     // Road 인스턴스들 렌더링
     ModelClass* roadModel = m_ModelManager->GetModel(ModelType::ROAD);
@@ -338,7 +360,7 @@ void GraphicsClass::RenderIndividualObjects(XMMATRIX& viewMatrix, XMMATRIX& proj
             model->Render(m_D3D->GetDeviceContext());
 
             // 100분의 1로 축소하는 스케일링 행렬 생성
-            XMMATRIX scaleMatrix = XMMatrixScaling(0.01f, 0.01f, 0.01f);
+            XMMATRIX scaleMatrix = XMMatrixScaling(0.05f, 0.05f, 0.05f);
             XMMATRIX finalWorldMatrix = scaleMatrix * obj.worldMatrix;
 
             m_TextureShader->Render(m_D3D->GetDeviceContext(),

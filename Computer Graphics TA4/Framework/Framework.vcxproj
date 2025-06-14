@@ -178,6 +178,7 @@
     <Image Include="data\BackGround.dds" />
     <Image Include="data\PolygonBattleRoyale_Road_01.dds" />
     <Image Include="data\PolygonBattleRoyale_Texture_01_A.dds" />
+    <Image Include="data\PolygonBattleRoyale_Vehicles_01.dds" />
     <Image Include="data\Title.dds" />
     <Image Include="data\Tutorial.dds" />
   </ItemGroup>

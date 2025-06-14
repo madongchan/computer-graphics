@@ -17,7 +17,7 @@ enum class ModelType {
     CAR = 4,
     BIKE = 5,
     WALL = 6,
-    LAMP = 7,
+    TIRESTACK = 7,
     FENCE = 8,
     SIGN = 9,
     MODEL_COUNT = 10

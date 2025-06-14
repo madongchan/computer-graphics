@@ -126,6 +126,9 @@
     <Image Include="data\BackGround.dds">
       <Filter>리소스 파일</Filter>
     </Image>
+    <Image Include="data\PolygonBattleRoyale_Vehicles_01.dds">
+      <Filter>리소스 파일</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <None Include="data\textureShader.hlsl">
