@@ -36,7 +36,10 @@ void CameraClass::SetRotation(float x, float y, float z)
 
 XMFLOAT3 CameraClass::GetPosition() { return m_position; }
 XMFLOAT3 CameraClass::GetRotation() { return m_rotation; }
-
+XMVECTOR CameraClass::GetPositionXM() const
+{
+    return camPosition; // 카메라의 현재 위치 (XMVECTOR)
+}
 void CameraClass::MoveForward(float speed) { moveBackForward += speed; }
 void CameraClass::MoveRight(float speed) { moveLeftRight += speed; }
 void CameraClass::AdjustYaw(float amount) { camYaw += amount; }

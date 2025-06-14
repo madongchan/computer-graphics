@@ -1,4 +1,4 @@
-////////////////////////////////////////////////////////////////////////////////
+ï»¿////////////////////////////////////////////////////////////////////////////////
 // Filename: graphicsclass.cpp
 ////////////////////////////////////////////////////////////////////////////////
 #include "graphicsclass.h"
@@ -9,7 +9,7 @@ GraphicsClass::GraphicsClass()
 {
     m_D3D = 0;
     m_Camera = 0;
-    m_Model = 0;
+    m_HelthBarBillboardModel = 0;
 
     m_TextureShader = 0;
     m_BackGround = 0;
@@ -17,7 +17,7 @@ GraphicsClass::GraphicsClass()
     m_TutorialScreen = 0;
 
     m_Text = 0;
-    m_ModelManager = 0;  // »õ·Î Ãß°¡
+    m_ModelManager = 0;  // ìƒˆë¡œ ì¶”ê°€
 
     // Initialize the scene state
     m_FPS = 0;
@@ -86,14 +86,14 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
         return false;
     }
 
-    // ¸ğµ¨µé ÃÊ±âÈ­
+    // ëª¨ë¸ë“¤ ì´ˆê¸°í™”
     result = InitializeModels(m_D3D->GetDevice(), hwnd);
     if (!result)
     {
         return false;
     }
 
-    // ¹è°æ È­¸éµé ÃÊ±âÈ­ (±âÁ¸ ÄÚµå¿Í µ¿ÀÏ)
+    // ë°°ê²½ í™”ë©´ë“¤ ì´ˆê¸°í™” (ê¸°ì¡´ ì½”ë“œì™€ ë™ì¼)
     m_BackGround = new BitmapClass;
     if (!m_BackGround) return false;
     result = m_BackGround->Initialize(m_D3D->GetDevice(), screenWidth, screenHeight, L"./data/BackGround.dds", screenWidth, screenHeight);
@@ -127,6 +127,20 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
         return false;
     }
 
+    // ë¹Œë³´ë“œ ëª¨ë¸ ê°ì²´ë¥¼ ë§Œë“­ë‹ˆë‹¤.
+    m_HelthBarBillboardModel = new ModelClass;
+    if (!m_HelthBarBillboardModel)
+    {
+        return false;
+    }
+
+    // ë¹Œë³´ë“œ ëª¨ë¸ ê°ì²´ë¥¼ ì´ˆê¸°í™”í•©ë‹ˆë‹¤.
+    if (!m_HelthBarBillboardModel->Initialize(m_D3D->GetDevice(), L"./data/HELTHBAR.obj", L"./data/red_image.dds"))
+    {
+        MessageBox(hwnd, L"Could not initialize the billboard model object.", L"Error", MB_OK);
+        return false;
+    }
+
     m_Text = new TextClass;
     if (!m_Text) return false;
 
@@ -147,7 +161,7 @@ bool GraphicsClass::InitializeModels(ID3D11Device* device, HWND hwnd)
 {
     bool result;
 
-    // ModelManager ÃÊ±âÈ­
+    // ModelManager ì´ˆê¸°í™”
     m_ModelManager = new ModelManager;
     if (!m_ModelManager)
     {
@@ -161,10 +175,10 @@ bool GraphicsClass::InitializeModels(ID3D11Device* device, HWND hwnd)
         return false;
     }
 
-    // ÀÎ½ºÅÏ½ºµé ÃÊ±âÈ­
+    // ì¸ìŠ¤í„´ìŠ¤ë“¤ ì´ˆê¸°í™”
     InitializeInstances();
 
-    // °³º° ¿ÀºêÁ§Æ®µé ÃÊ±âÈ­
+    // ê°œë³„ ì˜¤ë¸Œì íŠ¸ë“¤ ì´ˆê¸°í™”
     InitializeIndividualObjects();
 
     return true;
@@ -172,7 +186,7 @@ bool GraphicsClass::InitializeModels(ID3D11Device* device, HWND hwnd)
 
 void GraphicsClass::InitializeInstances()
 {
-    // Road ÀÎ½ºÅÏ½ºµé - °İÀÚ ÆĞÅÏÀ¸·Î 25°³ ¹èÄ¡
+    // Road ì¸ìŠ¤í„´ìŠ¤ë“¤ - ê²©ì íŒ¨í„´ìœ¼ë¡œ 25ê°œ ë°°ì¹˜
     int roadGridSize = 5;
     for (int i = 0; i < roadGridSize * roadGridSize; i++)
     {
@@ -187,7 +201,7 @@ void GraphicsClass::InitializeInstances()
         m_RoadInstances.push_back(roadMatrix);
     }
 
-    // Tree ÀÎ½ºÅÏ½ºµé - ·£´ıÇÏ°Ô 20°³ ¹èÄ¡
+    // Tree ì¸ìŠ¤í„´ìŠ¤ë“¤ - ëœë¤í•˜ê²Œ 20ê°œ ë°°ì¹˜
     for (int i = 0; i < 20; i++)
     {
         float x = static_cast<float>(rand() % 200 - 100);
@@ -202,7 +216,7 @@ void GraphicsClass::InitializeInstances()
 
 void GraphicsClass::InitializeIndividualObjects()
 {
-    // »ç¶÷ ¿ÀºêÁ§Æ® - ¿øÇü °æ·Î ¾Ö´Ï¸ŞÀÌ¼Ç
+    // ì‚¬ëŒ ì˜¤ë¸Œì íŠ¸ - ì›í˜• ê²½ë¡œ ì• ë‹ˆë©”ì´ì…˜
     ObjectTransform person;
     person.worldMatrix = XMMatrixTranslation(20.0f, 0.0f, 0.0f);
     person.modelType = ModelType::PERSON;
@@ -211,7 +225,7 @@ void GraphicsClass::InitializeIndividualObjects()
     person.isAnimated = true;
     m_IndividualObjects.push_back(person);
 
-    // ÀÚµ¿Â÷ ¿ÀºêÁ§Æ® - Á÷¼± ¿Õº¹ ¾Ö´Ï¸ŞÀÌ¼Ç
+    // ìë™ì°¨ ì˜¤ë¸Œì íŠ¸ - ì§ì„  ì™•ë³µ ì• ë‹ˆë©”ì´ì…˜
     ObjectTransform car;
     car.worldMatrix = XMMatrixTranslation(0.0f, 0.0f, -10.0f);
     car.modelType = ModelType::CAR;
@@ -220,7 +234,7 @@ void GraphicsClass::InitializeIndividualObjects()
     car.isAnimated = true;
     m_IndividualObjects.push_back(car);
 
-    // °Ç¹° ¿ÀºêÁ§Æ® - YÃà È¸Àü ¾Ö´Ï¸ŞÀÌ¼Ç
+    // ê±´ë¬¼ ì˜¤ë¸Œì íŠ¸ - Yì¶• íšŒì „ ì• ë‹ˆë©”ì´ì…˜
     ObjectTransform building;
     XMMATRIX scaleBuildMatrix = XMMatrixScaling(0.5f, 0.5f, 0.5f);
     building.worldMatrix = scaleBuildMatrix * XMMatrixTranslation(35.0f, 9.0f, 35.0f);
@@ -228,37 +242,37 @@ void GraphicsClass::InitializeIndividualObjects()
     building.isAnimated = true;
     m_IndividualObjects.push_back(building);
 
-    // Á¤Àû ¿ÀºêÁ§Æ®µé Ãß°¡
+    // ì •ì  ì˜¤ë¸Œì íŠ¸ë“¤ ì¶”ê°€
 
-	// ¿ÀÅä¹ÙÀÌ ¿ÀºêÁ§Æ®
+	// ì˜¤í† ë°”ì´ ì˜¤ë¸Œì íŠ¸
     ObjectTransform bike;
     bike.worldMatrix = XMMatrixTranslation(-15.0f, 0.0f, 5.0f);
     bike.modelType = ModelType::BIKE;
     bike.isAnimated = false;
     m_IndividualObjects.push_back(bike);
 
-	// º® ¿ÀºêÁ§Æ®
+	// ë²½ ì˜¤ë¸Œì íŠ¸
     ObjectTransform wall;
     wall.worldMatrix = XMMatrixTranslation(30.0f, 0.0f, 0.0f);
     wall.modelType = ModelType::WALL;
     wall.isAnimated = false;
     m_IndividualObjects.push_back(wall);
 
-	// TireStack ¿ÀºêÁ§Æ®
+	// TireStack ì˜¤ë¸Œì íŠ¸
     ObjectTransform tireStack;
     tireStack.worldMatrix = XMMatrixTranslation(-30.0f, 0.0f, -10.0f);
     tireStack.modelType = ModelType::TIRESTACK;
     tireStack.isAnimated = false;
 	m_IndividualObjects.push_back(tireStack);
 
-	// FENCE ¿ÀºêÁ§Æ®
+	// FENCE ì˜¤ë¸Œì íŠ¸
     ObjectTransform fence;
     fence.worldMatrix = XMMatrixTranslation(0.0f, 0.0f, 30.0f);
     fence.modelType = ModelType::FENCE;
     fence.isAnimated = false;
 	m_IndividualObjects.push_back(fence);
 
-	// SIGN ¿ÀºêÁ§Æ®
+	// SIGN ì˜¤ë¸Œì íŠ¸
     ObjectTransform sign;
     sign.worldMatrix = XMMatrixTranslation(0.0f, 0.0f, 50.0f);
     sign.modelType = ModelType::SIGN;
@@ -276,7 +290,7 @@ void GraphicsClass::UpdateAnimations(float deltaTime)
 
         switch (i)
         {
-        case 0: // »ç¶÷ - ¿øÇü °æ·Î
+        case 0: // ì‚¬ëŒ - ì›í˜• ê²½ë¡œ
         {
             float radius = 20.0f;
             float speed = 1.0f;
@@ -286,7 +300,7 @@ void GraphicsClass::UpdateAnimations(float deltaTime)
         }
         break;
 
-        case 1: // ÀÚµ¿Â÷ - Á÷¼± ¿Õº¹
+        case 1: // ìë™ì°¨ - ì§ì„  ì™•ë³µ
         {
             float distance = 30.0f;
             float speed = 2.0f;
@@ -297,7 +311,7 @@ void GraphicsClass::UpdateAnimations(float deltaTime)
         }
         break;
 
-        case 9: // SIGN - YÃà È¸Àü
+        case 9: // SIGN - Yì¶• íšŒì „
         {
             float rotationSpeed = 3.0f;
             m_IndividualObjects[i].worldMatrix =
@@ -313,10 +327,10 @@ void GraphicsClass::UpdateAnimations(float deltaTime)
 
 void GraphicsClass::RenderInstancedObjects(XMMATRIX& viewMatrix, XMMATRIX& projectionMatrix)
 {
-    // ½ºÄÉÀÏ¸µ Çà·Ä »ı¼º
+    // ìŠ¤ì¼€ì¼ë§ í–‰ë ¬ ìƒì„±
     XMMATRIX scaleMatrix = XMMatrixScaling(0.02f, 0.02f, 0.02f);
 
-    // Road ÀÎ½ºÅÏ½ºµé ·»´õ¸µ
+    // Road ì¸ìŠ¤í„´ìŠ¤ë“¤ ë Œë”ë§
     ModelClass* roadModel = m_ModelManager->GetModel(ModelType::ROAD);
     if (roadModel)
     {
@@ -332,7 +346,7 @@ void GraphicsClass::RenderInstancedObjects(XMMATRIX& viewMatrix, XMMATRIX& proje
         }
     }
 
-    // Tree ÀÎ½ºÅÏ½ºµéµµ µ¿ÀÏÇÏ°Ô Ã³¸®
+    // Tree ì¸ìŠ¤í„´ìŠ¤ë“¤ë„ ë™ì¼í•˜ê²Œ ì²˜ë¦¬
     ModelClass* treeModel = m_ModelManager->GetModel(ModelType::TREE);
     if (treeModel)
     {
@@ -359,7 +373,7 @@ void GraphicsClass::RenderIndividualObjects(XMMATRIX& viewMatrix, XMMATRIX& proj
         {
             model->Render(m_D3D->GetDeviceContext());
 
-            // 100ºĞÀÇ 1·Î Ãà¼ÒÇÏ´Â ½ºÄÉÀÏ¸µ Çà·Ä »ı¼º
+            // 100ë¶„ì˜ 1ë¡œ ì¶•ì†Œí•˜ëŠ” ìŠ¤ì¼€ì¼ë§ í–‰ë ¬ ìƒì„±
             XMMATRIX scaleMatrix = XMMatrixScaling(0.05f, 0.05f, 0.05f);
             XMMATRIX finalWorldMatrix = scaleMatrix * obj.worldMatrix;
 
@@ -374,7 +388,7 @@ void GraphicsClass::RenderIndividualObjects(XMMATRIX& viewMatrix, XMMATRIX& proj
 
 void GraphicsClass::Shutdown()
 {
-    // ModelManager ÇØÁ¦
+    // ModelManager í•´ì œ
     if (m_ModelManager)
     {
         m_ModelManager->Shutdown();
@@ -382,7 +396,7 @@ void GraphicsClass::Shutdown()
         m_ModelManager = 0;
     }
 
-    // ±âÁ¸ ÇØÁ¦ ÄÚµåµé...
+    // ê¸°ì¡´ í•´ì œ ì½”ë“œë“¤...
     if (m_Text)
     {
         m_Text->Shutdown();
@@ -390,11 +404,11 @@ void GraphicsClass::Shutdown()
         m_Text = nullptr;
     }
 
-    if (m_Model)
+    if (m_HelthBarBillboardModel)
     {
-        m_Model->Shutdown();
-        delete m_Model;
-        m_Model = 0;
+        m_HelthBarBillboardModel->Shutdown();
+        delete m_HelthBarBillboardModel;
+        m_HelthBarBillboardModel = 0;
     }
 
     if (m_Camera)
@@ -447,13 +461,13 @@ bool GraphicsClass::Frame(int fps, float cpuUsage)
     m_CPUUsage = cpuUsage;
     static float rotation = 0.0f;
 
-    // ½Ã°£ °è»ê
+    // ì‹œê°„ ê³„ì‚°
     static float lastTime = GetTickCount() / 1000.0f;
     float currentTime = GetTickCount() / 1000.0f;
     float deltaTime = currentTime - lastTime;
     lastTime = currentTime;
 
-    // Å° »óÅÂ ¾÷µ¥ÀÌÆ®
+    // í‚¤ ìƒíƒœ ì—…ë°ì´íŠ¸
     InputClass::UpdateKeyStates();
 
     if (InputClass::IsAnyKeyPressed())
@@ -468,11 +482,11 @@ bool GraphicsClass::Frame(int fps, float cpuUsage)
         }
     }
 
-    // ¸ŞÀÎ ¾À¿¡¼­¸¸ Ä«¸Ş¶ó ÀÌµ¿°ú ¾Ö´Ï¸ŞÀÌ¼Ç Ã³¸®
+    // ë©”ì¸ ì”¬ì—ì„œë§Œ ì¹´ë©”ë¼ ì´ë™ê³¼ ì• ë‹ˆë©”ì´ì…˜ ì²˜ë¦¬
     if (m_SceneState == SceneState::MainScene)
     {
-        const float moveSpeed = 0.1f;
-        const float lookSensitivity = 0.002f;
+        const float moveSpeed = 0.5f;
+        const float lookSensitivity = 0.004f;
 
         // Movement input
         if (InputClass::IsKeyPressed('W') || InputClass::IsKeyPressed(VK_UP)) {
@@ -497,7 +511,7 @@ bool GraphicsClass::Frame(int fps, float cpuUsage)
         // Update camera
         m_Camera->UpdateCamera();
 
-        // ¾Ö´Ï¸ŞÀÌ¼Ç ¾÷µ¥ÀÌÆ®
+        // ì• ë‹ˆë©”ì´ì…˜ ì—…ë°ì´íŠ¸
         UpdateAnimations(deltaTime);
     }
 
@@ -509,7 +523,7 @@ bool GraphicsClass::Frame(int fps, float cpuUsage)
     }
 
     // Render the graphics scene.
-    result = Render(rotation);
+    result = Render();
     if (!result)
     {
         return false;
@@ -517,9 +531,10 @@ bool GraphicsClass::Frame(int fps, float cpuUsage)
     return true;
 }
 
-bool GraphicsClass::Render(float rotation)
+bool GraphicsClass::Render()
 {
-    XMMATRIX worldMatrix, viewMatrix, projectionMatrix, orthoMatrix;
+    XMMATRIX worldMatrix, viewMatrix, projectionMatrix, translateMatrix, orthoMatrix;
+    XMFLOAT3 cameraPosition, modelPosition;
     bool result = true;
 
     // Clear the buffers to begin the scene.
@@ -534,7 +549,7 @@ bool GraphicsClass::Render(float rotation)
     m_D3D->GetProjectionMatrix(projectionMatrix);
     m_D3D->GetOrthoMatrix(orthoMatrix);
 
-    // ¾À »óÅÂ¿¡ µû¶ó ´Ù¸¥ È­¸éÀ» ·»´õ¸µ
+    // ì”¬ ìƒíƒœì— ë”°ë¼ ë‹¤ë¥¸ í™”ë©´ì„ ë Œë”ë§
     switch (m_SceneState)
     {
     case SceneState::TITLE:
@@ -556,7 +571,7 @@ bool GraphicsClass::Render(float rotation)
         break;
 
     case SceneState::MainScene:
-        // ¹è°æ ·»´õ¸µ
+        // ë°°ê²½ ë Œë”ë§
         m_D3D->TurnZBufferOff();
         m_BackGround->Render(m_D3D->GetDeviceContext(), 0, 0);
         XMMATRIX identityMatrix = XMMatrixIdentity();
@@ -564,11 +579,47 @@ bool GraphicsClass::Render(float rotation)
             worldMatrix, identityMatrix, orthoMatrix, m_BackGround->GetTexture());
         m_D3D->TurnZBufferOn();
 
-        // 3D ¸ğµ¨µé ·»´õ¸µ
+        // 3D ëª¨ë¸ë“¤ ë Œë”ë§
         RenderInstancedObjects(viewMatrix, projectionMatrix);
         RenderIndividualObjects(viewMatrix, projectionMatrix);
 
-        // ÅØ½ºÆ® Ãâ·Â
+        // í—¬ìŠ¤ë°” ë¹Œë³´ë“œ ë Œë”ë§
+        const auto& playerObject = m_IndividualObjects[0]; // PERSON ëª¨ë¸
+        XMVECTOR playerPosition = playerObject.worldMatrix.r[3];
+
+        // í—¬ìŠ¤ë°”ë¥¼ í”Œë ˆì´ì–´ ë¨¸ë¦¬ ìœ„ì— ìœ„ì¹˜ì‹œí‚¤ê¸° ìœ„í•œ ì˜¤í”„ì…‹
+        XMVECTOR healthBarOffset = XMVectorSet(0.0f, 10.0f, 0.0f, 0.0f); // Yì¶•ìœ¼ë¡œ 2.0 ìœ ë‹› ìœ„ (ëª¨ë¸ í¬ê¸°ì— ë”°ë¼ ì¡°ì ˆ)
+        XMVECTOR healthBarWorldPosition = XMVectorAdd(playerPosition, healthBarOffset);
+
+        // ì¹´ë©”ë¼ ìœ„ì¹˜ë¥¼ ì–»ëŠ”ë‹¤.
+        cameraPosition = m_Camera->GetPosition();
+
+        // ë¹Œë³´ë“œ ëª¨ë¸ì˜ ìœ„ì¹˜ë¥¼ â€‹â€‹ì„¤ì •í•©ë‹ˆë‹¤.
+        XMFLOAT3 modelPosition;
+        XMStoreFloat3(&modelPosition, healthBarWorldPosition);
+        // ì•„í¬ íƒ„ì  íŠ¸ í•¨ìˆ˜ë¥¼ ì‚¬ìš©í•˜ì—¬ í˜„ì¬ ì¹´ë©”ë¼ ìœ„ì¹˜ë¥¼ í–¥í•˜ë„ë¡ ë¹Œë³´ë“œ ëª¨ë¸ì— ì ìš©í•´ì•¼í•˜ëŠ” íšŒì „ì„ ê³„ì‚°í•©ë‹ˆë‹¤.
+        double angle = atan2(modelPosition.x - cameraPosition.x, modelPosition.z - cameraPosition.z) * (180.0 / XM_PI);
+
+        // íšŒì „ì„ ë¼ë””ì•ˆìœ¼ë¡œ ë³€í™˜í•©ë‹ˆë‹¤.
+        float rotation = (float)angle * 0.0174532925f;
+
+        // ì„¸ê³„ í–‰ë ¬ì„ ì‚¬ìš©í•˜ì—¬ ì›ì ì—ì„œ ë¹Œë³´ë“œ íšŒì „ì„ ì„¤ì •í•©ë‹ˆë‹¤.
+        worldMatrix = XMMatrixRotationY(rotation);
+
+        // ë¹Œë³´ë“œ ëª¨ë¸ì—ì„œ ë²ˆì—­ í–‰ë ¬ì„ ì„¤ì •í•©ë‹ˆë‹¤.
+        translateMatrix = XMMatrixTranslation(modelPosition.x, modelPosition.y, modelPosition.z);
+
+        // ë§ˆì§€ë§‰ìœ¼ë¡œ íšŒì „ ë° ë³€í™˜ í–‰ë ¬ì„ ê²°í•©í•˜ì—¬ ë¹Œë³´ë“œ ëª¨ë¸ì˜ ìµœì¢… í–‰ë ¬ì„ ë§Œë“­ë‹ˆë‹¤.
+        worldMatrix = XMMatrixMultiply(worldMatrix, translateMatrix);
+
+        // í—¬ìŠ¤ë°” ëª¨ë¸ ë Œë”ë§
+        m_HelthBarBillboardModel->Render(m_D3D->GetDeviceContext());
+        result = m_TextureShader->Render(m_D3D->GetDeviceContext(), m_HelthBarBillboardModel->GetIndexCount(),
+            worldMatrix, viewMatrix, projectionMatrix,
+            m_HelthBarBillboardModel->GetTexture());
+        if (!result) return false;
+
+        // í…ìŠ¤íŠ¸ ì¶œë ¥
         wchar_t fpsText[64], cpuText[64], polyText[64], resolText[64];
         swprintf_s(fpsText, 64, L"FPS: %d", m_FPS);
         swprintf_s(cpuText, 64, L"CPU: %d%%", static_cast<int>(m_CPUUsage));

@@ -17,6 +17,7 @@ public:
     void SetRotation(float, float, float);
     XMFLOAT3 GetPosition();
     XMFLOAT3 GetRotation();
+    XMVECTOR GetPositionXM() const;
 
     void MoveForward(float);
     void MoveRight(float);

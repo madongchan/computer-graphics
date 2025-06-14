@@ -62,7 +62,7 @@ public:
     D3DClass* GetD3D() { return m_D3D; }
 
 private:
-    bool Render(float);
+    bool Render();
     bool InitializeModels(ID3D11Device* device, HWND hwnd);
     void InitializeInstances();
     void InitializeIndividualObjects();
@@ -74,7 +74,8 @@ private:
     SceneState m_SceneState;
     D3DClass* m_D3D;
     CameraClass* m_Camera;
-    ModelClass* m_Model;
+    
+    ModelClass* m_HelthBarBillboardModel;
 
     TextureShaderClass* m_TextureShader;
     BitmapClass* m_BackGround;
