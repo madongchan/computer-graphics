@@ -20,7 +20,7 @@ using namespace DirectX;
 #include "fpsclass.h"
 #include "cpuclass.h"
 #include "bitmapclass.h"
-#include "ModelManager.h"  // 새로 추가
+#include "ModelManager.h"
 
 /////////////
 // GLOBALS //
@@ -69,6 +69,8 @@ private:
     void UpdateAnimations(float deltaTime);
     void RenderInstancedObjects(XMMATRIX& viewMatrix, XMMATRIX& projectionMatrix);
     void RenderIndividualObjects(XMMATRIX& viewMatrix, XMMATRIX& projectionMatrix);
+
+    
 
 private:
     SceneState m_SceneState;

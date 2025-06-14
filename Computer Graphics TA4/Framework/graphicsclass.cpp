@@ -29,6 +29,8 @@ GraphicsClass::GraphicsClass()
 
     m_AnimationTime = 0.0f;
     m_LastFrameTime = 0.0f;
+
+    
 }
 
 GraphicsClass::GraphicsClass(const GraphicsClass& other)
@@ -69,7 +71,7 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
     }
 
     // Set the initial position of the camera.
-    m_Camera->SetPosition(0.0f, 10.0f, -50.0f);
+    m_Camera->SetPosition(0.0f, 5.0f, -50.0f);
 
     // Create the texture shader object.
     m_TextureShader = new TextureShaderClass;
@@ -244,40 +246,40 @@ void GraphicsClass::InitializeIndividualObjects()
 
     // 정적 오브젝트들 추가
 
-	// 오토바이 오브젝트
+    // 오토바이 오브젝트
     ObjectTransform bike;
     bike.worldMatrix = XMMatrixTranslation(-15.0f, 0.0f, 5.0f);
     bike.modelType = ModelType::BIKE;
     bike.isAnimated = false;
     m_IndividualObjects.push_back(bike);
 
-	// 벽 오브젝트
+    // 벽 오브젝트
     ObjectTransform wall;
     wall.worldMatrix = XMMatrixTranslation(30.0f, 0.0f, 0.0f);
     wall.modelType = ModelType::WALL;
     wall.isAnimated = false;
     m_IndividualObjects.push_back(wall);
 
-	// TireStack 오브젝트
+    // TireStack 오브젝트
     ObjectTransform tireStack;
     tireStack.worldMatrix = XMMatrixTranslation(-30.0f, 0.0f, -10.0f);
     tireStack.modelType = ModelType::TIRESTACK;
     tireStack.isAnimated = false;
-	m_IndividualObjects.push_back(tireStack);
+    m_IndividualObjects.push_back(tireStack);
 
-	// FENCE 오브젝트
+    // FENCE 오브젝트
     ObjectTransform fence;
     fence.worldMatrix = XMMatrixTranslation(0.0f, 0.0f, 30.0f);
     fence.modelType = ModelType::FENCE;
     fence.isAnimated = false;
-	m_IndividualObjects.push_back(fence);
+    m_IndividualObjects.push_back(fence);
 
-	// SIGN 오브젝트
+    // SIGN 오브젝트
     ObjectTransform sign;
     sign.worldMatrix = XMMatrixTranslation(0.0f, 0.0f, 50.0f);
     sign.modelType = ModelType::SIGN;
-	sign.isAnimated = false;
-	m_IndividualObjects.push_back(sign);
+    sign.isAnimated = false;
+    m_IndividualObjects.push_back(sign);
 }
 
 void GraphicsClass::UpdateAnimations(float deltaTime)
@@ -295,7 +297,7 @@ void GraphicsClass::UpdateAnimations(float deltaTime)
             float radius = 20.0f;
             float speed = 1.0f;
             float angle = m_AnimationTime * speed;
-            m_IndividualObjects[i].worldMatrix = 
+            m_IndividualObjects[i].worldMatrix =
                 XMMatrixTranslation(cos(angle) * radius, 0.0f, sin(angle) * radius);
         }
         break;
@@ -462,6 +464,7 @@ bool GraphicsClass::Frame(int fps, float cpuUsage)
     static float rotation = 0.0f;
 
     // 시간 계산
+     // 시간 계산
     static float lastTime = GetTickCount() / 1000.0f;
     float currentTime = GetTickCount() / 1000.0f;
     float deltaTime = currentTime - lastTime;
@@ -502,13 +505,25 @@ bool GraphicsClass::Frame(int fps, float cpuUsage)
             m_Camera->MoveRight(moveSpeed);
         }
 
-        // Mouse look input
+        // 점프 입력 처리 (스페이스바)
+        static bool spacePressed = false;
+        bool spaceCurrentlyPressed = InputClass::IsKeyPressed(VK_SPACE);
+
+        if (spaceCurrentlyPressed && !spacePressed) {
+            m_Camera->Jump();  // 키를 누르는 순간에만 점프
+        }
+        spacePressed = spaceCurrentlyPressed;
+
+        // 마우스 시점 처리...
         float deltaX = InputClass::GetMouseDeltaX();
         float deltaY = InputClass::GetMouseDeltaY();
         m_Camera->AdjustYaw(deltaX * lookSensitivity);
         m_Camera->AdjustPitch(deltaY * lookSensitivity);
 
-        // Update camera
+        // 중력 적용 (매 프레임)
+        m_Camera->ApplyGravity(deltaTime);
+
+        // 카메라 업데이트
         m_Camera->UpdateCamera();
 
         // 애니메이션 업데이트
