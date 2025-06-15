@@ -39,6 +39,8 @@ public:
     ModelClass* GetModel(int index);
     int GetModelCount() const;
 
+    int GetModelPolygonCount();
+
 private:
     void InitializeModelPaths();
 };

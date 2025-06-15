@@ -17,7 +17,12 @@ public:
     static bool IsAnyKeyPressed();
     static bool IsKeyPressed(unsigned int keyCode);
 
+   
+
     static void UpdateMousePosition(int x, int y);
+    bool IsKeyJustPressed(unsigned int keyCode);
+    bool IsKeyJustReleased(unsigned int keyCode);
+    static bool IsAnyKeyJustPressed();
     static int GetMouseDeltaX();
     static int GetMouseDeltaY();
 

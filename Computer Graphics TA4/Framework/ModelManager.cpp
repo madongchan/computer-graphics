@@ -68,6 +68,15 @@ int ModelManager::GetModelCount() const {
     return static_cast<int>(ModelType::MODEL_COUNT);
 }
 
+// ¸ðµ¨µéÀÇ Æú¸®°ï °¹ ¼ö
+int ModelManager::GetModelPolygonCount() {
+    long PolygonCount = 0;
+    for (auto& model : m_Models) {
+        PolygonCount += model->GetIndexCount() / 3;
+    }
+    return PolygonCount;
+}
+
 void ModelManager::InitializeModelPaths() {
     // ¸ðµ¨ ÆÄÀÏ °æ·Îµé
     m_ModelPaths = {

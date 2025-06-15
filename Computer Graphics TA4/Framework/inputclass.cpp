@@ -47,22 +47,26 @@ void InputClass::UpdateKeyStates()
         s_initialized = true;
     }
 
+    // 현재 상태를 이전 상태로 복사 (중요!)
+    memcpy(s_prevKeyState, s_currentKeyState, sizeof(s_currentKeyState));
+
+    // 새로운 현재 상태 업데이트
     for (int i = 0; i < 256; ++i)
     {
         s_currentKeyState[i] = (GetAsyncKeyState(i) & 0x8000) != 0;
     }
 
-    // Update previous mouse position
+    // 마우스 위치 업데이트 (기존 코드)
     s_prevMouseX = s_mouseX;
     s_prevMouseY = s_mouseY;
 
-    // Get current mouse position
     POINT mousePos;
     GetCursorPos(&mousePos);
     ScreenToClient(GetForegroundWindow(), &mousePos);
     s_mouseX = mousePos.x;
     s_mouseY = mousePos.y;
 }
+
 
 bool InputClass::IsAnyKeyPressed()
 {
@@ -87,6 +91,32 @@ void InputClass::UpdateMousePosition(int x, int y)
     s_prevMouseY = s_mouseY;
     s_mouseX = x;
     s_mouseY = y;
+}
+bool InputClass::IsKeyJustPressed(unsigned int keyCode)
+{
+    return s_currentKeyState[keyCode] && !s_prevKeyState[keyCode];
+}
+
+bool InputClass::IsKeyJustReleased(unsigned int keyCode)
+{
+    return !s_currentKeyState[keyCode] && s_prevKeyState[keyCode];
+}
+
+bool InputClass::IsAnyKeyJustPressed()
+{
+    for (int i = 0; i < 256; ++i)
+    {
+        // 특수 키들 제외 (마우스 버튼, 시스템 키 등)
+        if (i == VK_LBUTTON || i == VK_RBUTTON || i == VK_MBUTTON ||
+            i == VK_CAPITAL || i == VK_NUMLOCK || i == VK_SCROLL)
+            continue;
+
+        if (s_currentKeyState[i] && !s_prevKeyState[i])
+        {
+            return true;
+        }
+    }
+    return false;
 }
 
 int InputClass::GetMouseDeltaX()

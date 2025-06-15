@@ -25,7 +25,7 @@ GraphicsClass::GraphicsClass()
     m_PolygonCount = 0;
     m_ScreenWidth = 0;
     m_ScreenHeight = 0;
-    m_SceneState = SceneState::MainScene;
+    m_SceneState = SceneState::TITLE;
 
     m_AnimationTime = 0.0f;
     m_LastFrameTime = 0.0f;
@@ -222,8 +222,6 @@ void GraphicsClass::InitializeIndividualObjects()
     ObjectTransform person;
     person.worldMatrix = XMMatrixTranslation(20.0f, 0.0f, 0.0f);
     person.modelType = ModelType::PERSON;
-    person.velocity = XMFLOAT3(0.0f, 0.0f, 0.0f);
-    person.rotationSpeed = XMFLOAT3(0.0f, 1.0f, 0.0f);
     person.isAnimated = true;
     m_IndividualObjects.push_back(person);
 
@@ -231,8 +229,6 @@ void GraphicsClass::InitializeIndividualObjects()
     ObjectTransform car;
     car.worldMatrix = XMMatrixTranslation(0.0f, 0.0f, -10.0f);
     car.modelType = ModelType::CAR;
-    car.velocity = XMFLOAT3(2.0f, 0.0f, 0.0f);
-    car.rotationSpeed = XMFLOAT3(0.0f, 0.0f, 0.0f);
     car.isAnimated = true;
     m_IndividualObjects.push_back(car);
 
@@ -278,7 +274,7 @@ void GraphicsClass::InitializeIndividualObjects()
     ObjectTransform sign;
     sign.worldMatrix = XMMatrixTranslation(0.0f, 0.0f, 50.0f);
     sign.modelType = ModelType::SIGN;
-    sign.isAnimated = false;
+    sign.isAnimated = true;
     m_IndividualObjects.push_back(sign);
 }
 
@@ -290,9 +286,8 @@ void GraphicsClass::UpdateAnimations(float deltaTime)
     {
         if (!m_IndividualObjects[i].isAnimated) continue;
 
-        switch (i)
-        {
-        case 0: // 사람 - 원형 경로
+        // 사람 - 원형 경로
+        if (m_IndividualObjects[i].modelType == ModelType::PERSON)
         {
             float radius = 20.0f;
             float speed = 1.0f;
@@ -300,9 +295,9 @@ void GraphicsClass::UpdateAnimations(float deltaTime)
             m_IndividualObjects[i].worldMatrix =
                 XMMatrixTranslation(cos(angle) * radius, 0.0f, sin(angle) * radius);
         }
-        break;
 
-        case 1: // 자동차 - 직선 왕복
+        // 자동차 - 직선 왕복
+        if (m_IndividualObjects[i].modelType == ModelType::CAR)
         {
             float distance = 30.0f;
             float speed = 2.0f;
@@ -311,16 +306,14 @@ void GraphicsClass::UpdateAnimations(float deltaTime)
                 XMMatrixRotationY(XM_PI * 0.5f) *
                 XMMatrixTranslation(position, 0.0f, -10.0f);
         }
-        break;
 
-        case 9: // SIGN - Y축 회전
+        // SIGN - Y축 회전
+        if (m_IndividualObjects[i].modelType == ModelType::SIGN)
         {
             float rotationSpeed = 3.0f;
             m_IndividualObjects[i].worldMatrix =
                 XMMatrixRotationY(m_AnimationTime * rotationSpeed) *
-                XMMatrixTranslation(0.0f, 20.0f, 25.0f);
-        }
-        break;
+                XMMatrixTranslation(0.0f, 0.0f, 25.0f);
         }
     }
 }
@@ -473,15 +466,15 @@ bool GraphicsClass::Frame(int fps, float cpuUsage)
     // 키 상태 업데이트
     InputClass::UpdateKeyStates();
 
-    if (InputClass::IsAnyKeyPressed())
+    if (InputClass::IsAnyKeyJustPressed())
     {
+        if (m_SceneState == SceneState::Tutorial)
+        {
+            m_SceneState = SceneState::MainScene;
+        }
         if (m_SceneState == SceneState::TITLE)
         {
             m_SceneState = SceneState::Tutorial;
-        }
-        else if (m_SceneState == SceneState::Tutorial)
-        {
-            m_SceneState = SceneState::MainScene;
         }
     }
 
@@ -548,6 +541,7 @@ bool GraphicsClass::Frame(int fps, float cpuUsage)
 
 bool GraphicsClass::Render()
 {
+    
     XMMATRIX worldMatrix, viewMatrix, projectionMatrix, translateMatrix, orthoMatrix;
     XMFLOAT3 cameraPosition, modelPosition;
     bool result = true;
@@ -638,6 +632,10 @@ bool GraphicsClass::Render()
         wchar_t fpsText[64], cpuText[64], polyText[64], resolText[64];
         swprintf_s(fpsText, 64, L"FPS: %d", m_FPS);
         swprintf_s(cpuText, 64, L"CPU: %d%%", static_cast<int>(m_CPUUsage));
+
+        m_PolygonCount = 0;
+        m_PolygonCount = m_ModelManager->GetModelPolygonCount();
+        m_PolygonCount += m_HelthBarBillboardModel->GetIndexCount() / 3;
         swprintf_s(polyText, 64, L"POLYGON: %d", m_PolygonCount);
         swprintf_s(resolText, 64, L"RESOLUTION: %d X %d", static_cast<int>(m_ScreenWidth), static_cast<int>(m_ScreenHeight));
 

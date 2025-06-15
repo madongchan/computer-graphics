@@ -40,8 +40,6 @@ enum class SceneState {
 struct ObjectTransform {
     XMMATRIX worldMatrix;
     ModelType modelType;
-    XMFLOAT3 velocity;
-    XMFLOAT3 rotationSpeed;
     bool isAnimated;
 };
 
@@ -102,7 +100,7 @@ private:
 
     int m_FPS;
     float m_CPUUsage;
-    int m_PolygonCount;
+    long m_PolygonCount;
     float m_ScreenWidth;
     float m_ScreenHeight;
 };
