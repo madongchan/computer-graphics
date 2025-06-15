@@ -11,7 +11,11 @@ int InputClass::s_mouseY = 0;
 int InputClass::s_prevMouseX = 0;
 int InputClass::s_prevMouseY = 0;
 
-InputClass::InputClass() {}
+InputClass::InputClass() 
+{
+    // 멤버 변수 초기화
+    
+}
 InputClass::InputClass(const InputClass& other) {}
 InputClass::~InputClass() {}
 

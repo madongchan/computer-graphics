@@ -38,10 +38,11 @@ enum class SceneState {
 
 // 개별 오브젝트 변환 정보 구조체
 struct ObjectTransform {
-    XMMATRIX worldMatrix;
-    ModelType modelType;
-    bool isAnimated;
+    XMMATRIX worldMatrix = XMMatrixIdentity();
+    ModelType modelType = ModelType::ROAD;
+    bool isAnimated = false;
 };
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // Class name: GraphicsClass

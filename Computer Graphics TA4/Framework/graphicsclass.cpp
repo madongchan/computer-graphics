@@ -5,36 +5,52 @@
 #include "inputclass.h"
 #include <cmath>
 
+
 GraphicsClass::GraphicsClass()
 {
-    m_D3D = 0;
-    m_Camera = 0;
-    m_HelthBarBillboardModel = 0;
+    m_D3D = nullptr;
+    m_Camera = nullptr;
+    m_HelthBarBillboardModel = nullptr;
+    m_TextureShader = nullptr;
+    m_BackGround = nullptr;
+    m_TitleScreen = nullptr;
+    m_TutorialScreen = nullptr;
+    m_Text = nullptr;
+    m_ModelManager = nullptr;
 
-    m_TextureShader = 0;
-    m_BackGround = 0;
-    m_TitleScreen = 0;
-    m_TutorialScreen = 0;
-
-    m_Text = 0;
-    m_ModelManager = 0;  // 새로 추가
-
-    // Initialize the scene state
+    // 추가 초기화 필요
     m_FPS = 0;
     m_CPUUsage = 0.0f;
     m_PolygonCount = 0;
-    m_ScreenWidth = 0;
-    m_ScreenHeight = 0;
-    m_SceneState = SceneState::TITLE;
-
+    m_ScreenWidth = 0.0f;
+    m_ScreenHeight = 0.0f;
+    m_SceneState = SceneState::MainScene;
     m_AnimationTime = 0.0f;
     m_LastFrameTime = 0.0f;
-
-    
 }
+
 
 GraphicsClass::GraphicsClass(const GraphicsClass& other)
 {
+    m_D3D = nullptr;
+    m_Camera = nullptr;
+    m_HelthBarBillboardModel = nullptr;
+    m_TextureShader = nullptr;
+    m_BackGround = nullptr;
+    m_TitleScreen = nullptr;
+    m_TutorialScreen = nullptr;
+    m_Text = nullptr;
+    m_ModelManager = nullptr;
+
+    // 추가 초기화 필요
+    m_FPS = 0;
+    m_CPUUsage = 0.0f;
+    m_PolygonCount = 0;
+    m_ScreenWidth = 0.0f;
+    m_ScreenHeight = 0.0f;
+    m_SceneState = SceneState::MainScene;
+    m_AnimationTime = 0.0f;
+    m_LastFrameTime = 0.0f;
 }
 
 GraphicsClass::~GraphicsClass()
@@ -45,8 +61,8 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 {
     bool result;
 
-    m_ScreenWidth = screenWidth;
-    m_ScreenHeight = screenHeight;
+    m_ScreenWidth = (float)screenWidth;
+    m_ScreenHeight = (float)screenHeight;
 
     // Create the Direct3D object.
     m_D3D = new D3DClass;
@@ -56,7 +72,7 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
     }
 
     // Initialize the Direct3D object.
-    result = m_D3D->Initialize(screenWidth, screenHeight, VSYNC_ENABLED, hwnd, FULL_SCREEN, SCREEN_DEPTH, SCREEN_NEAR);
+    result = m_D3D->Initialize((int)m_ScreenWidth, (int)m_ScreenHeight, VSYNC_ENABLED, hwnd, FULL_SCREEN, SCREEN_DEPTH, SCREEN_NEAR);
     if (!result)
     {
         MessageBox(hwnd, L"Could not initialize Direct3D.", L"Error", MB_OK);
@@ -177,6 +193,9 @@ bool GraphicsClass::InitializeModels(ID3D11Device* device, HWND hwnd)
         return false;
     }
 
+
+    
+
     // 인스턴스들 초기화
     InitializeInstances();
 
@@ -218,21 +237,21 @@ void GraphicsClass::InitializeInstances()
 
 void GraphicsClass::InitializeIndividualObjects()
 {
-    // 사람 오브젝트 - 원형 경로 애니메이션
+    // 사람 오브젝트
     ObjectTransform person;
     person.worldMatrix = XMMatrixTranslation(20.0f, 0.0f, 0.0f);
     person.modelType = ModelType::PERSON;
     person.isAnimated = true;
     m_IndividualObjects.push_back(person);
 
-    // 자동차 오브젝트 - 직선 왕복 애니메이션
+    // 자동차 오브젝트
     ObjectTransform car;
     car.worldMatrix = XMMatrixTranslation(0.0f, 0.0f, -10.0f);
     car.modelType = ModelType::CAR;
     car.isAnimated = true;
     m_IndividualObjects.push_back(car);
 
-    // 건물 오브젝트 - Y축 회전 애니메이션
+    // 건물 오브젝트
     ObjectTransform building;
     XMMATRIX scaleBuildMatrix = XMMatrixScaling(0.5f, 0.5f, 0.5f);
     building.worldMatrix = scaleBuildMatrix * XMMatrixTranslation(35.0f, 9.0f, 35.0f);
@@ -368,7 +387,7 @@ void GraphicsClass::RenderIndividualObjects(XMMATRIX& viewMatrix, XMMATRIX& proj
         {
             model->Render(m_D3D->GetDeviceContext());
 
-            // 100분의 1로 축소하는 스케일링 행렬 생성
+            // 100분의 5로 축소하는 스케일링 행렬 생성
             XMMATRIX scaleMatrix = XMMatrixScaling(0.05f, 0.05f, 0.05f);
             XMMATRIX finalWorldMatrix = scaleMatrix * obj.worldMatrix;
 
@@ -458,8 +477,8 @@ bool GraphicsClass::Frame(int fps, float cpuUsage)
 
     // 시간 계산
      // 시간 계산
-    static float lastTime = GetTickCount() / 1000.0f;
-    float currentTime = GetTickCount() / 1000.0f;
+    static float lastTime = GetTickCount64() / 1000.0f;
+    float currentTime = GetTickCount64() / 1000.0f;
     float deltaTime = currentTime - lastTime;
     lastTime = currentTime;
 
@@ -508,8 +527,8 @@ bool GraphicsClass::Frame(int fps, float cpuUsage)
         spacePressed = spaceCurrentlyPressed;
 
         // 마우스 시점 처리...
-        float deltaX = InputClass::GetMouseDeltaX();
-        float deltaY = InputClass::GetMouseDeltaY();
+        float deltaX = (float)InputClass::GetMouseDeltaX();
+        float deltaY = (float)InputClass::GetMouseDeltaY();
         m_Camera->AdjustYaw(deltaX * lookSensitivity);
         m_Camera->AdjustPitch(deltaY * lookSensitivity);
 

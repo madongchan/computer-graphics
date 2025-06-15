@@ -2,10 +2,11 @@
 // Filename: main.cpp
 ////////////////////////////////////////////////////////////////////////////////
 #include "systemclass.h"
-
+#include <ctime>
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline, int iCmdshow)
 {
+	srand(static_cast<unsigned int>(time(nullptr))); // rand 시드 고정
 	SystemClass* System;
 	bool result;
 	

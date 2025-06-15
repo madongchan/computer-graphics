@@ -51,14 +51,17 @@ void ModelManager::Shutdown() {
 
 ModelClass* ModelManager::GetModel(ModelType type) {
     int index = static_cast<int>(type);
-    if (index >= 0 && index < m_Models.size()) {
+    // MODEL_COUNT 이상의 값 체크 추가
+    if (index >= 0 && index < static_cast<int>(ModelType::MODEL_COUNT)) {
         return m_Models[index];
     }
     return nullptr;
 }
 
+
 ModelClass* ModelManager::GetModel(int index) {
-    if (index >= 0 && index < m_Models.size()) {
+    // MODEL_COUNT 이상의 값 체크 추가
+    if (index >= 0 && index < static_cast<int>(ModelType::MODEL_COUNT)) {
         return m_Models[index];
     }
     return nullptr;
