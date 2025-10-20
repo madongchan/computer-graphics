@@ -22,8 +22,13 @@ public:
 
 	bool IsKeyDown(unsigned int);
 
+
+	void Update(); // 프레임마다 호출
+	bool IsKeyPressed(unsigned int key); // 이번 프레임에 처음 눌렸는지
+
 private:
 	bool m_keys[256];
+	bool m_prevKeys[256];
 };
 
 #endif

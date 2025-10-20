@@ -12,7 +12,8 @@
 #include "cameraclass.h"
 #include "modelclass.h"
 #include "lightshaderclass.h" 
-#include "lightclass.h"       
+#include "lightclass.h"      
+#include "inputclass.h"
 
 
 /////////////
@@ -36,7 +37,7 @@ public:
 
 	bool Initialize(int, int, HWND);
 	void Shutdown();
-	bool Frame();
+	bool Frame(InputClass*);
 
 private:
 	bool Render(float);
@@ -53,6 +54,10 @@ private:
 	LightClass* m_Light;
 
 	float m_rotation;
+	// Lighting toggles
+	bool m_isAmbientOn;
+	bool m_isDiffuseOn;
+	bool m_isSpecularOn;
 };
 
 #endif

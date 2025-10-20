@@ -2,7 +2,7 @@
 // Filename: graphicsclass.cpp
 ////////////////////////////////////////////////////////////////////////////////
 #include "graphicsclass.h"
-
+#include <dinput.h>
 
 GraphicsClass::GraphicsClass()
 {
@@ -15,6 +15,9 @@ GraphicsClass::GraphicsClass()
 	m_LightShader = 0;
 	m_Light = 0;
 	m_rotation = 0.0f;
+	m_isAmbientOn = true;
+	m_isDiffuseOn = true;
+	m_isSpecularOn = true;
 }
 
 
@@ -186,7 +189,7 @@ void GraphicsClass::Shutdown()
 }
 
 
-bool GraphicsClass::Frame()
+bool GraphicsClass::Frame(InputClass* Input)
 {
 	bool result;
 
@@ -195,6 +198,19 @@ bool GraphicsClass::Frame()
 	if (m_rotation > (2.0f * (float)XM_PI))
 	{
 		m_rotation -= (2.0f * (float)XM_PI);
+	}
+
+	if (Input->IsKeyPressed(DIK_5)) // 5번 키
+	{
+		m_isAmbientOn = !m_isAmbientOn;
+	}
+	if (Input->IsKeyPressed(DIK_6)) // 6번 키
+	{
+		m_isDiffuseOn = !m_isDiffuseOn;
+	}
+	if (Input->IsKeyPressed(DIK_7)) // 7번 키
+	{
+		m_isSpecularOn = !m_isSpecularOn;
 	}
 
 	// Render the graphics scene.
@@ -252,7 +268,7 @@ bool GraphicsClass::Render(float rotation)
 	// --- (수정) 10배 작게 스케일링 (0.1f) ---
 	worldMatrix *= XMMatrixScaling(0.02f, 0.02f, 0.02f);
 
-	worldMatrix *= XMMatrixRotationY(rotation * 0.7f); // 다른 속도
+	worldMatrix *= XMMatrixRotationY(rotation); // 다른 속도
 	worldMatrix *= XMMatrixTranslation(1.0f, 0.0f, 0.0f);
 
 	m_Model2->Render(m_D3D->GetDeviceContext());
