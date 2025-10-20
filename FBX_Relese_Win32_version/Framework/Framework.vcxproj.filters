@@ -32,7 +32,16 @@
     <ClCompile Include="modelclass.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="colorshaderclass.cpp">
+    <ClCompile Include="lightshaderclass.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="lightclass.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="DDSTextureLoader.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="textureclass.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
@@ -58,13 +67,45 @@
     <ClInclude Include="modelclass.h">
       <Filter>소스 파일</Filter>
     </ClInclude>
-    <ClInclude Include="colorshaderclass.h">
+    <ClInclude Include="lightshaderclass.h">
+      <Filter>소스 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="lightclass.h">
+      <Filter>소스 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="DDSTextureLoader.h">
+      <Filter>소스 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="textureclass.h">
       <Filter>소스 파일</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="data\colorShader.hlsl">
+    <None Include="data\phongLightShader.hlsl">
       <Filter>리소스 파일</Filter>
     </None>
+    <None Include="data\Road.fbx">
+      <Filter>리소스 파일</Filter>
+    </None>
+    <None Include="data\SM_Prop_Benchpress_01.fbx">
+      <Filter>리소스 파일</Filter>
+    </None>
+    <None Include="data\SM_Prop_EmergencyDrop_Crate_01.fbx">
+      <Filter>리소스 파일</Filter>
+    </None>
+    <None Include="data\SM_Prop_Propane_01.fbx">
+      <Filter>리소스 파일</Filter>
+    </None>
+    <None Include="data\cube.fbx">
+      <Filter>리소스 파일</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="data\Road.dds">
+      <Filter>리소스 파일</Filter>
+    </Image>
+    <Image Include="data\PolygonBattleRoyale_Texture_01_A.dds">
+      <Filter>리소스 파일</Filter>
+    </Image>
   </ItemGroup>
 </Project>

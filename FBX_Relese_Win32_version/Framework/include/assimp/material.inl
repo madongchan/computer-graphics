@@ -3,7 +3,7 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------
 
-Copyright (c) 2006-2025, assimp team
+Copyright (c) 2006-2022, assimp team
 
 All rights reserved.
 
@@ -48,6 +48,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifdef __GNUC__
 #   pragma GCC system_header
 #endif
+
+#ifdef max
+
+#undef max
+#undef min
+#endif // max
 
 // ---------------------------------------------------------------------------
 AI_FORCE_INLINE aiPropertyTypeInfo ai_real_to_property_type_info(float) {
@@ -97,12 +103,9 @@ AI_FORCE_INLINE aiReturn aiMaterial::Get(const char* pKey,unsigned int type,
         if (prop->mType != aiPTI_Buffer) {
             return AI_FAILURE;
         }
-// std::min has in some cases a conflict with a defined min
-#ifdef min
-#   undef min
-#endif
+
         iNum = static_cast<unsigned int>(std::min(static_cast<size_t>(iNum),prop->mDataLength / sizeof(Type)));
-        std::memcpy(pOut,prop->mData,iNum * sizeof(Type));
+        ::memcpy(pOut,prop->mData,iNum * sizeof(Type));
         if (pMax) {
             *pMax = iNum;
         }
@@ -136,7 +139,9 @@ AI_FORCE_INLINE aiReturn aiMaterial::Get(const char* pKey,unsigned int type,
 // Specialisation for a single bool.
 // Casts floating point and integer to bool
 template <>
-AI_FORCE_INLINE aiReturn aiMaterial::Get(const char *pKey, unsigned int type,
+AI_FORCE_INLINE
+        aiReturn
+        aiMaterial::Get(const char *pKey, unsigned int type,
                 unsigned int idx, bool &pOut) const {
     const aiMaterialProperty *prop;
     const aiReturn ret = ::aiGetMaterialProperty(this, pKey, type, idx,
@@ -191,7 +196,7 @@ AI_FORCE_INLINE aiReturn aiMaterial::Get(const char* pKey,unsigned int type,
 }
 // ---------------------------------------------------------------------------
 AI_FORCE_INLINE aiReturn aiMaterial::Get(const char* pKey,unsigned int type,
-        unsigned int idx, ai_real& pOut) const {
+        unsigned int idx,ai_real& pOut) const {
     return aiGetMaterialFloat(this,pKey,type,idx,&pOut);
 }
 // ---------------------------------------------------------------------------
@@ -209,8 +214,7 @@ AI_FORCE_INLINE aiReturn aiMaterial::Get(const char* pKey,unsigned int type,
         unsigned int idx,aiColor3D& pOut) const {
     aiColor4D c;
     const aiReturn ret = aiGetMaterialColor(this,pKey,type,idx,&c);
-    if (ret == aiReturn_SUCCESS)
-        pOut = aiColor3D(c.r,c.g,c.b);
+    pOut = aiColor3D(c.r,c.g,c.b);
     return ret;
 }
 // ---------------------------------------------------------------------------
@@ -226,8 +230,8 @@ AI_FORCE_INLINE aiReturn aiMaterial::Get(const char* pKey,unsigned int type,
 
 // ---------------------------------------------------------------------------
 template<class TYPE>
-aiReturn aiMaterial::AddProperty (const TYPE* pInput,
-        const unsigned int pNumValues, const char* pKey, unsigned int type,
+aiReturn aiMaterial::AddProperty (const TYPE* pInput, 
+        const unsigned int pNumValues, const char* pKey, unsigned int type, 
         unsigned int index) {
     return AddBinaryProperty((const void*)pInput, pNumValues * sizeof(TYPE),
         pKey,type,index,aiPTI_Buffer);
@@ -309,6 +313,7 @@ AI_FORCE_INLINE aiReturn aiMaterial::AddProperty(const int* pInput,
         pNumValues * sizeof(int),
         pKey,type,index,aiPTI_Integer);
 }
+
 
 // ---------------------------------------------------------------------------
 // The template specializations below are for backwards compatibility.

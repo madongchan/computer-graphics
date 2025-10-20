@@ -33,6 +33,11 @@ using namespace std;
 #include "assimp/scene.h"
 #include "assimp/postprocess.h"
 
+///////////////////////
+// MY CLASS INCLUDES //
+///////////////////////
+#include "textureclass.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 // Class name: ModelClass
 ////////////////////////////////////////////////////////////////////////////////
@@ -51,26 +56,39 @@ public:
 	ModelClass(const ModelClass&);
 	~ModelClass();
 
-	bool Initialize(ID3D11Device*, const WCHAR*);
+	// --- 수정 1: Initialize 함수 선언 변경 ---
+	// 1. Assimp용 모델 경로 (char*)
+	// 2. TextureClass용 텍스처 경로 (WCHAR*)
+	bool Initialize(ID3D11Device* device, const char* modelFilename, const WCHAR* textureFilename);
+
 	void Shutdown();
 	void Render(ID3D11DeviceContext*);
 
 	int GetIndexCount();
-
-	bool LoadModel(CString, UINT flag);
-	void ReleaseModel();
+	ID3D11ShaderResourceView* GetTexture(); //
 
 private:
+	// --- 수정 2: 내부 헬퍼 함수로 변경 ---
+	// Initialize() 내부에서 호출될 함수들입니다.
 	bool InitializeBuffers(ID3D11Device*);
+	bool LoadModel(const char*); // CString이 아닌 char*를 받도록 수정
+
 	void ShutdownBuffers();
 	void RenderBuffers(ID3D11DeviceContext*);
 
-private:
-	ID3D11Buffer *m_vertexBuffer, *m_indexBuffer;
-	unsigned int m_vertexCount, m_indexCount, m_faceCount;
+	// --- 수정 3: 불필요한 함수 선언 제거 ---
+	// (LoadTexture, ReleaseModel 등은 Initialize/Shutdown이 처리)
 
-	VertexType *m_vertices;
-	unsigned long *m_indices;
+private:
+	ID3D11Buffer* m_vertexBuffer, * m_indexBuffer;
+	int m_vertexCount, m_indexCount; // "unsigned int" -> "int"로 변경 (GetIndexCount와 통일)
+	int m_faceCount; // LoadModel에서 사용
+
+	// --- 수정 4: LoadModel에서 사용할 멤버 변수 ---
+	VertexType* m_vertices;     // RAM에 임시 저장할 정점 배열
+	unsigned long* m_indices;  // RAM에 임시 저장할 인덱스 배열
+
+	TextureClass* m_Texture; //
 };
 
 #endif
