@@ -1,66 +1,74 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Filename: inputclass.cpp
+// Filename: lightclass.cpp
 ////////////////////////////////////////////////////////////////////////////////
-#include "inputclass.h"
+#include "lightclass.h"
 
 
-InputClass::InputClass()
+LightClass::LightClass()
 {
 }
 
 
-InputClass::InputClass(const InputClass& other)
+LightClass::LightClass(const LightClass& other)
 {
 }
 
 
-InputClass::~InputClass()
+LightClass::~LightClass()
 {
 }
 
-
-void InputClass::Initialize()
+void LightClass::SetAmbientColor(float red, float green, float blue, float alpha)
 {
-	int i;
-
-
-	// Initialize all the keys to being released and not pressed.
-	for (i = 0; i < 256; i++)
-	{
-		m_keys[i] = false;
-	}
-
+	m_ambientColor = XMFLOAT4(red, green, blue, alpha);
 	return;
 }
 
-
-void InputClass::KeyDown(unsigned int input)
+void LightClass::SetDiffuseColor(float red, float green, float blue, float alpha)
 {
-	// If a key is pressed then save that state in the key array.
-	m_keys[input] = true;
+	m_diffuseColor = XMFLOAT4(red, green, blue, alpha);
 	return;
 }
 
-
-void InputClass::KeyUp(unsigned int input)
+void LightClass::SetDirection(float x, float y, float z)
 {
-	// If a key is released then clear that state in the key array.
-	m_keys[input] = false;
+	m_direction = XMFLOAT3(x, y, z);
 	return;
 }
 
-
-bool InputClass::IsKeyDown(unsigned int key)
+void LightClass::SetSpecularColor(float red, float green, float blue, float alpha)
 {
-	// Return what state the key is in (pressed/not pressed).
-	return m_keys[key];
+	m_specularColor = XMFLOAT4(red, green, blue, alpha);
+	return;
 }
 
-void InputClass::Update() {
-	for (int i = 0; i < 256; ++i)
-		m_prevKeys[i] = m_keys[i];
+void LightClass::SetSpecularPower(float power)
+{
+	m_specularPower = power;
+	return;
 }
 
-bool InputClass::IsKeyPressed(unsigned int key) {
-	return m_keys[key] && !m_prevKeys[key];
+XMFLOAT4 LightClass::GetAmbientColor()
+{
+	return m_ambientColor;
+}
+
+XMFLOAT4 LightClass::GetDiffuseColor()
+{
+	return m_diffuseColor;
+}
+
+XMFLOAT3 LightClass::GetDirection()
+{
+	return m_direction;
+}
+
+XMFLOAT4 LightClass::GetSpecularColor()
+{
+	return m_specularColor;
+}
+
+float LightClass::GetSpecularPower()
+{
+	return m_specularPower;
 }

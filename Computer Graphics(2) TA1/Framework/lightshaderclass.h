@@ -45,6 +45,14 @@ private:
 		float specularPower;
 		XMFLOAT4 specularColor;
 	};
+	// Lighting toggle buffer
+	struct LightToggleBufferType
+	{
+		float isAmbientOn;
+		float isDiffuseOn;
+		float isSpecularOn;
+		float padding;
+	};
 
 public:
 	LightShaderClass();
@@ -54,7 +62,8 @@ public:
 	bool Initialize(ID3D11Device*, HWND);
 	void Shutdown();
 	bool Render(ID3D11DeviceContext*, int, XMMATRIX, XMMATRIX, XMMATRIX, ID3D11ShaderResourceView*, 
-		XMFLOAT3, XMFLOAT4, XMFLOAT4, XMFLOAT3, XMFLOAT4, float);
+		XMFLOAT3, XMFLOAT4, XMFLOAT4, XMFLOAT3, XMFLOAT4, float,
+		bool isAmbientOn, bool isDiffuseOn, bool isSpecularOn);
 
 private:
 	bool InitializeShader(ID3D11Device*, HWND, const WCHAR*);
@@ -63,7 +72,7 @@ private:
 	//void OutputShaderErrorMessage(ID3D10Blob*, HWND, const WCHAR*);
 
 	bool SetShaderParameters(ID3D11DeviceContext*, XMMATRIX, XMMATRIX, XMMATRIX, ID3D11ShaderResourceView*, 
-		XMFLOAT3, XMFLOAT4, XMFLOAT4, XMFLOAT3, XMFLOAT4, float);
+		XMFLOAT3, XMFLOAT4, XMFLOAT4, XMFLOAT3, XMFLOAT4, float, bool, bool, bool);
 	void RenderShader(ID3D11DeviceContext*, int);
 
 private:
@@ -74,6 +83,7 @@ private:
 	ID3D11Buffer* m_matrixBuffer;
 	ID3D11Buffer* m_lightBuffer;
 	ID3D11Buffer* m_cameraBuffer;
+	ID3D11Buffer* m_lightToggleBuffer;
 };
 
 #endif

@@ -23,8 +23,8 @@ public:
 	bool IsKeyDown(unsigned int);
 
 
-	void Update(); // ÇÁ·¹ÀÓ¸¶´Ù È£Ãâ
-	bool IsKeyPressed(unsigned int key); // ÀÌ¹ø ÇÁ·¹ÀÓ¿¡ Ã³À½ ´­·È´ÂÁö
+	void Update(); // í”„ë ˆì„ë§ˆë‹¤ í˜¸ì¶œ
+	bool IsKeyPressed(unsigned int key); // ì´ë²ˆ í”„ë ˆì„ì— ì²˜ìŒ ëˆŒë ¸ëŠ”ì§€
 
 private:
 	bool m_keys[256];

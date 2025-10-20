@@ -137,13 +137,13 @@ bool SystemClass::Frame()
 	{
 		return false;
 	}
-
 	// Do the frame processing for the graphics object.
 	result = m_Graphics->Frame(m_Input);
 	if(!result)
 	{
 		return false;
 	}
+	m_Input->Update();
 
 	return true;
 }

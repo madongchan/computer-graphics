@@ -12,6 +12,8 @@ LightShaderClass::LightShaderClass()
 	m_sampleState = 0;
 	m_matrixBuffer = 0;
 	m_lightBuffer = 0;
+	m_lightBuffer = 0;
+	m_lightToggleBuffer = 0;
 }
 
 
@@ -53,14 +55,16 @@ bool LightShaderClass::Render(ID3D11DeviceContext* deviceContext, int indexCount
 	XMMATRIX worldMatrix, XMMATRIX viewMatrix, XMMATRIX projectionMatrix, 
 	ID3D11ShaderResourceView* texture, 
 	XMFLOAT3 lightDirection, XMFLOAT4 ambientColor, XMFLOAT4 diffuseColor,
-	XMFLOAT3 cameraPosition, XMFLOAT4 specularColor, float specularPower)
+	XMFLOAT3 cameraPosition, XMFLOAT4 specularColor, float specularPower,
+	bool isAmbientOn, bool isDiffuseOn, bool isSpecularOn)
 {
 	bool result;
 
 
 	// Set the shader parameters that it will use for rendering.
 	result = SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, texture, 
-		lightDirection, ambientColor, diffuseColor, cameraPosition, specularColor, specularPower);
+		lightDirection, ambientColor, diffuseColor, cameraPosition, specularColor, specularPower,
+		isAmbientOn, isDiffuseOn, isSpecularOn);
 	if(!result)
 	{
 		return false;
@@ -85,6 +89,7 @@ bool LightShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, const W
 	D3D11_BUFFER_DESC matrixBufferDesc;
 	D3D11_BUFFER_DESC lightBufferDesc;
 	D3D11_BUFFER_DESC cameraBufferDesc;
+	D3D11_BUFFER_DESC lightToggleBufferDesc;
 
 	// Initialize the pointers this function will use to null.
 	errorMessage = 0;
@@ -255,6 +260,18 @@ bool LightShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, const W
 		return false;
 	}
 
+	lightToggleBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+	lightToggleBufferDesc.ByteWidth = sizeof(LightToggleBufferType);
+	lightToggleBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	lightToggleBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	lightToggleBufferDesc.MiscFlags = 0;
+	lightToggleBufferDesc.StructureByteStride = 0;
+
+	result = device->CreateBuffer(&lightToggleBufferDesc, NULL, &m_lightToggleBuffer);
+	if (FAILED(result))
+	{
+		return false;
+	}
 	return true;
 }
 
@@ -274,7 +291,12 @@ void LightShaderClass::ShutdownShader()
 		m_matrixBuffer->Release();
 		m_matrixBuffer = 0;
 	}
-
+	// Release the light toggle constant buffer.
+	if (m_lightToggleBuffer)
+	{
+		m_lightToggleBuffer->Release();
+		m_lightToggleBuffer = 0;
+	}
 	// Release the sampler state.
 	if(m_sampleState)
 	{
@@ -362,7 +384,8 @@ void LightShaderClass::OutputShaderErrorMessage(ID3DBlob* errorMessage, HWND hwn
 bool LightShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext, 
 	XMMATRIX worldMatrix, XMMATRIX viewMatrix, XMMATRIX projectionMatrix, 
 	ID3D11ShaderResourceView* texture, 
-	XMFLOAT3 lightDirection, XMFLOAT4 ambientColor, XMFLOAT4 diffuseColor, XMFLOAT3 cameraPosition, XMFLOAT4 specularColor, float specularPower)
+	XMFLOAT3 lightDirection, XMFLOAT4 ambientColor, XMFLOAT4 diffuseColor, XMFLOAT3 cameraPosition, XMFLOAT4 specularColor, float specularPower,
+	bool isAmbientOn, bool isDiffuseOn, bool isSpecularOn)
 {
 	HRESULT result;
     D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -370,6 +393,7 @@ bool LightShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext,
 	MatrixBufferType* dataPtr;
 	LightBufferType* dataPtr2;
 	CameraBufferType* dataPtr3;
+	LightToggleBufferType* dataPtr_Toggle;
 
 	// Transpose the matrices to prepare them for the shader.
 	worldMatrix = XMMatrixTranspose(worldMatrix);
@@ -451,6 +475,28 @@ bool LightShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext,
 
 	// Now set the camera constant buffer in the vertex shader with the updated values.
 	deviceContext->VSSetConstantBuffers(bufferNumber, 1, &m_cameraBuffer);
+
+	// ------------------ Lighting Toggle Buffer ------------------
+	result = deviceContext->Map(m_lightToggleBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	if (FAILED(result))
+	{
+		return false;
+	}
+
+	// 데이터 포인터를 가져옵니다.
+	dataPtr_Toggle = (LightToggleBufferType*)mappedResource.pData;
+
+	// C++의 bool 값을 HLSL의 float (1.0f/0.0f)로 변환하여 복사합니다.
+	dataPtr_Toggle->isAmbientOn = isAmbientOn ? 1.0f : 0.0f;
+	dataPtr_Toggle->isDiffuseOn = isDiffuseOn ? 1.0f : 0.0f;
+	dataPtr_Toggle->isSpecularOn = isSpecularOn ? 1.0f : 0.0f;
+	dataPtr_Toggle->padding = 0.0f;
+
+	// 버퍼를 풉니다.
+	deviceContext->Unmap(m_lightToggleBuffer, 0);
+
+	// 픽셀 셰이더의 상수 버퍼 슬롯(register) 3번에 설정합니다.
+	deviceContext->PSSetConstantBuffers(1, 1, &m_lightToggleBuffer);
 
 	return true;
 }

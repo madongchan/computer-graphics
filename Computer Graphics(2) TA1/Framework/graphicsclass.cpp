@@ -59,7 +59,7 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	// Set the initial position of the camera.
-	m_Camera->SetPosition(0.0f, 2.0f, -10.0f);	// for cube model
+	m_Camera->SetPosition(0.0f, 1.0f, -8.0f);	// for cube model
 	
 	// 모델 1
 	m_Model1 = new ModelClass;
@@ -199,16 +199,15 @@ bool GraphicsClass::Frame(InputClass* Input)
 	{
 		m_rotation -= (2.0f * (float)XM_PI);
 	}
-
-	if (Input->IsKeyPressed(DIK_5)) // 5번 키
+	if (Input->IsKeyPressed(0x35) || Input->IsKeyPressed(VK_NUMPAD5)) // 5번 키
 	{
 		m_isAmbientOn = !m_isAmbientOn;
 	}
-	if (Input->IsKeyPressed(DIK_6)) // 6번 키
+	if (Input->IsKeyPressed(0x36) || Input->IsKeyPressed(VK_NUMPAD6)) // 6번 키
 	{
 		m_isDiffuseOn = !m_isDiffuseOn;
 	}
-	if (Input->IsKeyPressed(DIK_7)) // 7번 키
+	if (Input->IsKeyPressed(0x37) || Input->IsKeyPressed(VK_NUMPAD7)) // 7번 키
 	{
 		m_isSpecularOn = !m_isSpecularOn;
 	}
@@ -227,29 +226,24 @@ bool GraphicsClass::Frame(InputClass* Input)
 
 bool GraphicsClass::Render(float rotation)
 {
-	XMMATRIX viewMatrix, projectionMatrix;
+	XMMATRIX worldMatrix, viewMatrix, projectionMatrix;
 	bool result;
 
-	// Clear the buffers to begin the scene.
+	// 1. 버퍼 클리어
 	m_D3D->BeginScene(0.0f, 0.0f, 0.0f, 1.0f);
 
-	// Generate the view matrix based on the camera's position.
+	// 2. 뷰 행렬 생성
 	m_Camera->Render();
 
-	// Get the view and projection matrices from the camera and d3d objects.
+	// 3. 뷰/프로젝션 행렬 가져오기
 	m_Camera->GetViewMatrix(viewMatrix);
 	m_D3D->GetProjectionMatrix(projectionMatrix);
 
-	// 셰이더에 넘겨줄 각 모델의 고유한 월드 행렬을 만듭니다.
-	XMMATRIX worldMatrix;
+	// 4. 렌더링 루프 (모델 4개)
 
-	// -----------------------------------------------------------------
 	// 4.1 m_Model1 그리기 (왼쪽)
-	worldMatrix = XMMatrixIdentity(); // 월드 행렬 리셋
-
-	// --- (수정) 10배 작게 스케일링 (0.1f) ---
-	worldMatrix *= XMMatrixScaling(0.015f, 0.015f, 0.015f);
-
+	worldMatrix = XMMatrixIdentity(); // 리셋
+	worldMatrix *= XMMatrixScaling(0.01f, 0.01f, 0.01f); // 크기 10%
 	worldMatrix *= XMMatrixRotationY(rotation); // Y축 자전
 	worldMatrix *= XMMatrixTranslation(-3.0f, 0.0f, 0.0f); // 위치 이동
 
@@ -258,49 +252,43 @@ bool GraphicsClass::Render(float rotation)
 		m_Model1->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix,
 		m_Model1->GetTexture(), m_Light->GetDirection(), m_Light->GetAmbientColor(),
 		m_Light->GetDiffuseColor(), m_Camera->GetPosition(), m_Light->GetSpecularColor(),
-		m_Light->GetSpecularPower());
+		m_Light->GetSpecularPower(),
+		m_isAmbientOn, m_isDiffuseOn, m_isSpecularOn); // 토글 값 전달
 	if (!result) { return false; }
 
-	// -----------------------------------------------------------------
-	// 4.2 m_Model2 그리기 (중앙, 다른 속도)
+	// 4.2 m_Model2 그리기 (중앙)
 	worldMatrix = XMMatrixIdentity();
-
-	// --- (수정) 10배 작게 스케일링 (0.1f) ---
-	worldMatrix *= XMMatrixScaling(0.02f, 0.02f, 0.02f);
-
-	worldMatrix *= XMMatrixRotationY(rotation); // 다른 속도
-	worldMatrix *= XMMatrixTranslation(1.0f, 0.0f, 0.0f);
+	worldMatrix *= XMMatrixScaling(0.01f, 0.01f, 0.01f);
+	worldMatrix *= XMMatrixRotationY(rotation);
+	worldMatrix *= XMMatrixTranslation(0.0f, 0.0f, 0.0f);
 
 	m_Model2->Render(m_D3D->GetDeviceContext());
 	result = m_LightShader->Render(m_D3D->GetDeviceContext(),
 		m_Model2->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix,
 		m_Model2->GetTexture(), m_Light->GetDirection(), m_Light->GetAmbientColor(),
 		m_Light->GetDiffuseColor(), m_Camera->GetPosition(), m_Light->GetSpecularColor(),
-		m_Light->GetSpecularPower());
+		m_Light->GetSpecularPower(),
+		m_isAmbientOn, m_isDiffuseOn, m_isSpecularOn);
 	if (!result) { return false; }
 
-	// -----------------------------------------------------------------
 	// 4.3 m_Model3 그리기 (오른쪽)
 	worldMatrix = XMMatrixIdentity();
-
-	// --- (수정) 10배 작게 스케일링 (0.1f) ---
-	worldMatrix *= XMMatrixScaling(0.02f, 0.02f, 0.02f);
-
+	worldMatrix *= XMMatrixScaling(0.01f, 0.01f, 0.01f);
 	worldMatrix *= XMMatrixRotationY(rotation);
-	worldMatrix *= XMMatrixTranslation(5.0f, 0.0f, 0.0f);
+	worldMatrix *= XMMatrixTranslation(3.0f, 0.0f, 0.0f);
 
 	m_Model3->Render(m_D3D->GetDeviceContext());
 	result = m_LightShader->Render(m_D3D->GetDeviceContext(),
 		m_Model3->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix,
 		m_Model3->GetTexture(), m_Light->GetDirection(), m_Light->GetAmbientColor(),
 		m_Light->GetDiffuseColor(), m_Camera->GetPosition(), m_Light->GetSpecularColor(),
-		m_Light->GetSpecularPower());
+		m_Light->GetSpecularPower(),
+		m_isAmbientOn, m_isDiffuseOn, m_isSpecularOn);
 	if (!result) { return false; }
 
-	// -----------------------------------------------------------------
-	// 4.4 m_GroundModel 그리기 (바닥) - (수정 없음)
+	// 4.4 m_GroundModel 그리기 (바닥)
 	worldMatrix = XMMatrixIdentity();
-	worldMatrix *= XMMatrixScaling(0.1f, 0.1f, 0.1f); // 바닥 크기 (유지)
+	worldMatrix *= XMMatrixScaling(0.1f, 0.1f, 0.1f); // 바닥 크기
 	worldMatrix *= XMMatrixTranslation(0.0f, -1.0f, 0.0f); // 바닥 위치
 
 	m_GroundModel->Render(m_D3D->GetDeviceContext());
@@ -308,10 +296,11 @@ bool GraphicsClass::Render(float rotation)
 		m_GroundModel->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix,
 		m_GroundModel->GetTexture(), m_Light->GetDirection(), m_Light->GetAmbientColor(),
 		m_Light->GetDiffuseColor(), m_Camera->GetPosition(), m_Light->GetSpecularColor(),
-		m_Light->GetSpecularPower());
+		m_Light->GetSpecularPower(),
+		m_isAmbientOn, m_isDiffuseOn, m_isSpecularOn);
 	if (!result) { return false; }
 
-	// Present the rendered scene to the screen.
+	// 5. 씬 종료
 	m_D3D->EndScene();
 
 	return true;
