@@ -18,6 +18,7 @@ GraphicsClass::GraphicsClass()
 	m_isAmbientOn = true;
 	m_isDiffuseOn = true;
 	m_isSpecularOn = true;
+	m_pointLightIntensity = 1.0f; // 기본 강도 1.0
 }
 
 
@@ -59,7 +60,7 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	// Set the initial position of the camera.
-	m_Camera->SetPosition(0.0f, 1.0f, -8.0f);	// for cube model
+	m_Camera->SetPosition(0.0f, 1.0f, -7.0f);	// for cube model
 	
 	// 모델 1
 	m_Model1 = new ModelClass;
@@ -120,11 +121,30 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		return false;
 	}
 	// Initialize the light object.
-	m_Light->SetAmbientColor(0.15f, 0.15f, 0.15f, 1.0f);     //
-	m_Light->SetDiffuseColor(1.0f, 1.0f, 1.0f, 1.0f);     //
-	m_Light->SetDirection(0.0f, -0.5f, 1.0f);             //
-	m_Light->SetSpecularColor(1.0f, 1.0f, 1.0f, 1.0f);    //
-	m_Light->SetSpecularPower(32.0f);                    //
+	m_Light->SetAmbientColor(0.15f, 0.15f, 0.15f, 1.0f);     
+	m_Light->SetDiffuseColor(1.0f, 1.0f, 1.0f, 1.0f);     
+	m_Light->SetDirection(0.0f, -0.5f, 1.0f);             
+	m_Light->SetSpecularColor(1.0f, 1.0f, 1.0f, 1.0f);    
+	m_Light->SetSpecularPower(32.0f);    
+	
+	// Point Light 초기화
+	m_pointLightIntensity = 1.0f;
+
+	// --- ★ (수정 2) 포인트 라이트 3개 초기값 설정 ★ ---
+	//
+	// (위치와 색상은 예시입니다. 동찬님께서 원하시는 값으로 설정하세요.)
+
+	// 포인트 라이트 0 (예: 빨간색, 왼쪽 위)
+	m_Light->SetPointLightColor(0, 1.0f, 0.0f, 0.0f, 1.0f); // R, G, B, A
+	m_Light->SetPointLightPosition(0, -3.0f, 0.0f, 0.0f);   // X, Y, Z
+
+	// 포인트 라이트 1 (예: 녹색, 중앙 위)
+	m_Light->SetPointLightColor(1, 0.0f, 1.0f, 0.0f, 1.0f);
+	m_Light->SetPointLightPosition(1, 0.0f, 0.0f, 0.0f);
+
+	// 포인트 라이트 2 (예: 파란색, 오른쪽 위)
+	m_Light->SetPointLightColor(2, 0.0f, 0.0f, 1.0f, 1.0f);
+	m_Light->SetPointLightPosition(2, 3.0f, 0.0f, 0.0f);
 	return true;
 }
 void GraphicsClass::Shutdown()
@@ -211,6 +231,23 @@ bool GraphicsClass::Frame(InputClass* Input)
 	{
 		m_isSpecularOn = !m_isSpecularOn;
 	}
+	if (Input->IsKeyDown(0x38) || Input->IsKeyDown(VK_NUMPAD8)) // '8' - Point Light Intensity 증가
+	{
+		// 키를 계속 누르고 있어도 값이 계속 바뀌도록 IsKeyPressed 대신 IsKeyDown 사용
+		m_pointLightIntensity -= 0.05f; // 감소량 (조절 가능)
+		if (m_pointLightIntensity < 0.0f) // 최소값 0으로 제한
+		{
+			m_pointLightIntensity = 0.0f;
+		}
+	}
+	if (Input->IsKeyDown(0x39) || Input->IsKeyDown(VK_NUMPAD9)) // '9' - Point Light Intensity 감소
+	{
+		m_pointLightIntensity += 0.05f; // 증가량 (조절 가능)
+		if (m_pointLightIntensity > 5.0f) // 최대값 5로 제한
+		{
+			m_pointLightIntensity = 5.0f;
+		}
+	}
 
 	// Render the graphics scene.
 	// (기존 코드는 Render 호출이 없었지만, 여기서 해줘야 합니다)
@@ -239,8 +276,16 @@ bool GraphicsClass::Render(float rotation)
 	m_Camera->GetViewMatrix(viewMatrix);
 	m_D3D->GetProjectionMatrix(projectionMatrix);
 
+	// --- ★ (수정 4) 포인트 라이트 데이터 준비 (배열) ★ ---
+	// m_Light 객체에서 3개의 포인트 라이트 위치/색상 배열을 가져옵니다.
+	XMFLOAT4 pointLightPositions[NUM_POINT_LIGHTS];
+	XMFLOAT4 pointLightColors[NUM_POINT_LIGHTS];
+	for (int i = 0; i < NUM_POINT_LIGHTS; ++i)
+	{
+		pointLightPositions[i] = m_Light->GetPointLightPosition(i);
+		pointLightColors[i] = m_Light->GetPointLightColor(i);
+	}
 	// 4. 렌더링 루프 (모델 4개)
-
 	// 4.1 m_Model1 그리기 (왼쪽)
 	worldMatrix = XMMatrixIdentity(); // 리셋
 	worldMatrix *= XMMatrixScaling(0.01f, 0.01f, 0.01f); // 크기 10%
@@ -253,7 +298,8 @@ bool GraphicsClass::Render(float rotation)
 		m_Model1->GetTexture(), m_Light->GetDirection(), m_Light->GetAmbientColor(),
 		m_Light->GetDiffuseColor(), m_Camera->GetPosition(), m_Light->GetSpecularColor(),
 		m_Light->GetSpecularPower(),
-		m_isAmbientOn, m_isDiffuseOn, m_isSpecularOn); // 토글 값 전달
+		m_isAmbientOn, m_isDiffuseOn, m_isSpecularOn,
+		pointLightPositions, pointLightColors, m_pointLightIntensity); // 토글 값 전달
 	if (!result) { return false; }
 
 	// 4.2 m_Model2 그리기 (중앙)
@@ -268,7 +314,8 @@ bool GraphicsClass::Render(float rotation)
 		m_Model2->GetTexture(), m_Light->GetDirection(), m_Light->GetAmbientColor(),
 		m_Light->GetDiffuseColor(), m_Camera->GetPosition(), m_Light->GetSpecularColor(),
 		m_Light->GetSpecularPower(),
-		m_isAmbientOn, m_isDiffuseOn, m_isSpecularOn);
+		m_isAmbientOn, m_isDiffuseOn, m_isSpecularOn,
+		pointLightPositions, pointLightColors, m_pointLightIntensity);
 	if (!result) { return false; }
 
 	// 4.3 m_Model3 그리기 (오른쪽)
@@ -283,7 +330,8 @@ bool GraphicsClass::Render(float rotation)
 		m_Model3->GetTexture(), m_Light->GetDirection(), m_Light->GetAmbientColor(),
 		m_Light->GetDiffuseColor(), m_Camera->GetPosition(), m_Light->GetSpecularColor(),
 		m_Light->GetSpecularPower(),
-		m_isAmbientOn, m_isDiffuseOn, m_isSpecularOn);
+		m_isAmbientOn, m_isDiffuseOn, m_isSpecularOn,
+		pointLightPositions, pointLightColors, m_pointLightIntensity);
 	if (!result) { return false; }
 
 	// 4.4 m_GroundModel 그리기 (바닥)
@@ -297,7 +345,8 @@ bool GraphicsClass::Render(float rotation)
 		m_GroundModel->GetTexture(), m_Light->GetDirection(), m_Light->GetAmbientColor(),
 		m_Light->GetDiffuseColor(), m_Camera->GetPosition(), m_Light->GetSpecularColor(),
 		m_Light->GetSpecularPower(),
-		m_isAmbientOn, m_isDiffuseOn, m_isSpecularOn);
+		m_isAmbientOn, m_isDiffuseOn, m_isSpecularOn,
+		pointLightPositions, pointLightColors, m_pointLightIntensity);
 	if (!result) { return false; }
 
 	// 5. 씬 종료

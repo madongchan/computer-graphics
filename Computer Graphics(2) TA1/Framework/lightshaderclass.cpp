@@ -2,7 +2,7 @@
 // Filename: lightshaderclass.cpp
 ////////////////////////////////////////////////////////////////////////////////
 #include "lightshaderclass.h"
-
+#include <cstring>
 
 LightShaderClass::LightShaderClass()
 {
@@ -14,6 +14,7 @@ LightShaderClass::LightShaderClass()
 	m_lightBuffer = 0;
 	m_lightBuffer = 0;
 	m_lightToggleBuffer = 0;
+	m_pointLightBuffer = 0;
 }
 
 
@@ -50,32 +51,6 @@ void LightShaderClass::Shutdown()
 
 	return;
 }
-
-bool LightShaderClass::Render(ID3D11DeviceContext* deviceContext, int indexCount, 
-	XMMATRIX worldMatrix, XMMATRIX viewMatrix, XMMATRIX projectionMatrix, 
-	ID3D11ShaderResourceView* texture, 
-	XMFLOAT3 lightDirection, XMFLOAT4 ambientColor, XMFLOAT4 diffuseColor,
-	XMFLOAT3 cameraPosition, XMFLOAT4 specularColor, float specularPower,
-	bool isAmbientOn, bool isDiffuseOn, bool isSpecularOn)
-{
-	bool result;
-
-
-	// Set the shader parameters that it will use for rendering.
-	result = SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, texture, 
-		lightDirection, ambientColor, diffuseColor, cameraPosition, specularColor, specularPower,
-		isAmbientOn, isDiffuseOn, isSpecularOn);
-	if(!result)
-	{
-		return false;
-	}
-
-	// Now render the prepared buffers with the shader.
-	RenderShader(deviceContext, indexCount);
-
-	return true;
-}
-
 
 bool LightShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, const WCHAR* fileName)
 {
@@ -192,27 +167,7 @@ bool LightShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, const W
 	pixelShaderBuffer->Release();
 	pixelShaderBuffer = 0;
 
-	// Create a texture sampler state description.
-    samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-    samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
-    samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
-    samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
-    samplerDesc.MipLODBias = 0.0f;
-    samplerDesc.MaxAnisotropy = 1;
-    samplerDesc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
-    samplerDesc.BorderColor[0] = 0;
-	samplerDesc.BorderColor[1] = 0;
-	samplerDesc.BorderColor[2] = 0;
-	samplerDesc.BorderColor[3] = 0;
-    samplerDesc.MinLOD = 0;
-    samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
-
-	// Create the texture sampler state.
-    result = device->CreateSamplerState(&samplerDesc, &m_sampleState);
-	if(FAILED(result))
-	{
-		return false;
-	}
+	
 
 	// Setup the description of the dynamic matrix constant buffer that is in the vertex shader.
     matrixBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
@@ -272,6 +227,43 @@ bool LightShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, const W
 	{
 		return false;
 	}
+	// ★ 2. (추가) 포인트 라이트 버퍼 생성
+	D3D11_BUFFER_DESC pointLightBufferDesc;
+	pointLightBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+	pointLightBufferDesc.ByteWidth = sizeof(PointLightBufferType); // 새 구조체 크기 사용
+	pointLightBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	pointLightBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	pointLightBufferDesc.MiscFlags = 0;
+	pointLightBufferDesc.StructureByteStride = 0;
+
+	result = device->CreateBuffer(&pointLightBufferDesc, NULL, &m_pointLightBuffer);
+	if (FAILED(result))
+	{
+		return false;
+	}
+
+
+	// Create a texture sampler state description.
+	samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.MipLODBias = 0.0f;
+	samplerDesc.MaxAnisotropy = 1;
+	samplerDesc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
+	samplerDesc.BorderColor[0] = 0;
+	samplerDesc.BorderColor[1] = 0;
+	samplerDesc.BorderColor[2] = 0;
+	samplerDesc.BorderColor[3] = 0;
+	samplerDesc.MinLOD = 0;
+	samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
+
+	// Create the texture sampler state.
+	result = device->CreateSamplerState(&samplerDesc, &m_sampleState);
+	if (FAILED(result))
+	{
+		return false;
+	}
 	return true;
 }
 
@@ -290,6 +282,12 @@ void LightShaderClass::ShutdownShader()
 	{
 		m_matrixBuffer->Release();
 		m_matrixBuffer = 0;
+	}
+	// Release the point light constant buffer.
+	if (m_pointLightBuffer)
+	{
+		m_pointLightBuffer->Release();
+		m_pointLightBuffer = 0;
 	}
 	// Release the light toggle constant buffer.
 	if (m_lightToggleBuffer)
@@ -380,12 +378,41 @@ void LightShaderClass::OutputShaderErrorMessage(ID3DBlob* errorMessage, HWND hwn
 	return;
 }
 
+bool LightShaderClass::Render(ID3D11DeviceContext* deviceContext, int indexCount,
+	XMMATRIX worldMatrix, XMMATRIX viewMatrix, XMMATRIX projectionMatrix,
+	ID3D11ShaderResourceView* texture,
+	XMFLOAT3 lightDirection, XMFLOAT4 ambientColor, XMFLOAT4 diffuseColor,
+	XMFLOAT3 cameraPosition, XMFLOAT4 specularColor, float specularPower,
+	bool isAmbientOn, bool isDiffuseOn, bool isSpecularOn,
+	XMFLOAT4 pointLightPositions[], XMFLOAT4 pointLightColors[], float pointLightIntensity)
+{
+	bool result;
+
+
+	// Set the shader parameters that it will use for rendering.
+	result = SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, texture,
+		lightDirection, ambientColor, diffuseColor, cameraPosition, specularColor, specularPower,
+		isAmbientOn, isDiffuseOn, isSpecularOn,
+		pointLightPositions, pointLightColors, pointLightIntensity);
+	if (!result)
+	{
+		return false;
+	}
+
+	// Now render the prepared buffers with the shader.
+	RenderShader(deviceContext, indexCount);
+
+	return true;
+}
+
+
 // The SetShaderParameters function now takes in lightDirection and diffuseColor as inputs.
 bool LightShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext, 
 	XMMATRIX worldMatrix, XMMATRIX viewMatrix, XMMATRIX projectionMatrix, 
 	ID3D11ShaderResourceView* texture, 
 	XMFLOAT3 lightDirection, XMFLOAT4 ambientColor, XMFLOAT4 diffuseColor, XMFLOAT3 cameraPosition, XMFLOAT4 specularColor, float specularPower,
-	bool isAmbientOn, bool isDiffuseOn, bool isSpecularOn)
+	bool isAmbientOn, bool isDiffuseOn, bool isSpecularOn,
+	XMFLOAT4 pointLightPositions[], XMFLOAT4 pointLightColors[], float pointLightIntensity)
 {
 	HRESULT result;
     D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -394,6 +421,7 @@ bool LightShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext,
 	LightBufferType* dataPtr2;
 	CameraBufferType* dataPtr3;
 	LightToggleBufferType* dataPtr_Toggle;
+	PointLightBufferType* dataPtr_PointLight;
 
 	// Transpose the matrices to prepare them for the shader.
 	worldMatrix = XMMatrixTranspose(worldMatrix);
@@ -424,8 +452,6 @@ bool LightShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext,
 	// Now set the constant buffer in the vertex shader with the updated values.
     deviceContext->VSSetConstantBuffers(bufferNumber, 1, &m_matrixBuffer);
 
-	// Set shader texture resource in the pixel shader.
-	deviceContext->PSSetShaderResources(0, 1, &texture);
 
 	// Lock the light constant buffer so it can be written to.
 	result = deviceContext->Map(m_lightBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
@@ -495,8 +521,35 @@ bool LightShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext,
 	// 버퍼를 풉니다.
 	deviceContext->Unmap(m_lightToggleBuffer, 0);
 
-	// 픽셀 셰이더의 상수 버퍼 슬롯(register) 3번에 설정합니다.
+	// 픽셀 셰이더의 상수 버퍼 슬롯(register) 1번에 설정합니다.
 	deviceContext->PSSetConstantBuffers(1, 1, &m_lightToggleBuffer);
+
+	// --- ★ (추가) Point Light Buffer 데이터 전송 ★ ---
+	// ----------------------------------------------------
+	// 포인트 라이트 버퍼 Map
+	result = deviceContext->Map(m_pointLightBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	if (FAILED(result)) { return false; }
+
+	// 데이터 포인터 설정
+	dataPtr_PointLight = (PointLightBufferType*)mappedResource.pData;
+
+	// C++ 배열 데이터를 HLSL 구조체 배열로 복사 (memcpy 사용)
+	// 위치 배열 복사
+	memcpy(dataPtr_PointLight->pointLightPosition, pointLightPositions, sizeof(XMFLOAT4) * NUM_POINT_LIGHTS);
+	// 색상 배열 복사
+	memcpy(dataPtr_PointLight->pointLightColor, pointLightColors, sizeof(XMFLOAT4) * NUM_POINT_LIGHTS);
+	// 강도 값 복사
+	dataPtr_PointLight->pointLightIntensity = pointLightIntensity;
+	// 패딩 값 설정 (HLSL과 일치)
+	dataPtr_PointLight->padding = XMFLOAT3(0.0f, 0.0f, 0.0f); // 또는 0.0f 하나만 해도 될 수 있음
+
+	// 포인트 라이트 버퍼 Unmap
+	deviceContext->Unmap(m_pointLightBuffer, 0);
+
+	deviceContext->PSSetConstantBuffers(2, 1, &m_pointLightBuffer);
+
+	// Set shader texture resource in the pixel shader.
+	deviceContext->PSSetShaderResources(0, 1, &texture);
 
 	return true;
 }

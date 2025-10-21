@@ -58,6 +58,9 @@ private:
 	bool m_isAmbientOn;
 	bool m_isDiffuseOn;
 	bool m_isSpecularOn;
+
+	// --- ★ (수정 1) 포인트 라이트 강도 변수 추가 ★ ---
+	float m_pointLightIntensity; // 8, 9번 키로 조절할 값
 };
 
 #endif
