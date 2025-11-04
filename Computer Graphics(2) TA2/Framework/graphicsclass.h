@@ -17,6 +17,8 @@
 
 #include "skyboxclass.h"
 #include "skyboxshaderclass.h"
+#include "bumpmapshaderclass.h"
+#include "texturearrayclass.h"
 
 /////////////
 // GLOBALS //
@@ -59,6 +61,9 @@ private:
 
 	SkyboxClass* m_Skybox;
 	SkyboxShaderClass* m_SkyboxShader;
+
+	BumpMapShaderClass* m_BumpMapShader;
+	TextureArrayClass* m_GroundTextures; // (지면용: 색상 + 노멀맵)
 
 	float m_rotation;
 	// Lighting toggles

@@ -213,13 +213,25 @@ bool ModelClass::LoadModel(const char* filename)
 	Assimp::Importer importer;
 	// aiProcess_Triangulate: 모델이 사각형/오각형이어도 강제로 삼각형으로 쪼갬 (필수)
 	// aiProcess_ConvertToLeftHanded: DirectX는 왼손 좌표계를 사용하므로 변환 (필수)
+	// ★ aiProcess_CalcTangentSpace 플래그 추가
+	// (이 플래그가 없으면 pMesh->mTangents, pMesh->mBitangents가 생성되지 않음)
 	const aiScene* pScene = importer.ReadFile(filename,
-		aiProcess_Triangulate | aiProcess_ConvertToLeftHanded);
+		aiProcess_Triangulate |
+		aiProcess_ConvertToLeftHanded |
+		aiProcess_CalcTangentSpace); // ★ Tangent 계산 플래그
 
 	if (!pScene) return false;
 
+	// (주의: 이 코드는 첫 번째 메쉬만 로드합니다)
 	const aiMesh* pMesh = pScene->mMeshes[0];
 	if (!pMesh) return false;
+
+	// (Tangent, Binormal 데이터가 있는지 확인)
+	if (!pMesh->HasTangentsAndBitangents())
+	{
+		// (필요시: MessageBox 등으로 오류 알림)
+		return false;
+	}
 
 	m_vertexCount = pMesh->mNumVertices;
 	m_faceCount = static_cast<int>(pMesh->mNumFaces);
@@ -250,6 +262,16 @@ bool ModelClass::LoadModel(const char* filename)
 		m_vertices[i].normal.x = pMesh->mNormals[i].x;
 		m_vertices[i].normal.y = pMesh->mNormals[i].y;
 		m_vertices[i].normal.z = pMesh->mNormals[i].z;
+
+		// ★ (신규) Tangent (접선)
+		m_vertices[i].tangent.x = pMesh->mTangents[i].x;
+		m_vertices[i].tangent.y = pMesh->mTangents[i].y;
+		m_vertices[i].tangent.z = pMesh->mTangents[i].z;
+
+		// ★ (신규) Binormal (이중접선)
+		m_vertices[i].binormal.x = pMesh->mBitangents[i].x;
+		m_vertices[i].binormal.y = pMesh->mBitangents[i].y;
+		m_vertices[i].binormal.z = pMesh->mBitangents[i].z;
 	}
 
 	m_indices = new unsigned long[m_indexCount];

@@ -56,6 +56,12 @@
     <ClCompile Include="SkyboxClass.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="BumpMapShaderClass.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="TextureArrayClass.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="d3dclass.h">
@@ -103,6 +109,12 @@
     <ClInclude Include="SkyboxClass.h">
       <Filter>소스 파일</Filter>
     </ClInclude>
+    <ClInclude Include="BumpMapShaderClass.h">
+      <Filter>소스 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="TextureArrayClass.h">
+      <Filter>소스 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="data\phongLightShader.hlsl">
@@ -126,6 +138,12 @@
     <None Include="data\skybox.hlsl">
       <Filter>리소스 파일</Filter>
     </None>
+    <None Include="data\bumpmapShader.hlsl">
+      <Filter>리소스 파일</Filter>
+    </None>
+    <None Include="data\Floor.fbx">
+      <Filter>리소스 파일</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="data\Road.dds">
@@ -135,6 +153,12 @@
       <Filter>리소스 파일</Filter>
     </Image>
     <Image Include="data\skybox.dds">
+      <Filter>리소스 파일</Filter>
+    </Image>
+    <Image Include="data\Floor_color.dds">
+      <Filter>리소스 파일</Filter>
+    </Image>
+    <Image Include="data\Floor_normal.dds">
       <Filter>리소스 파일</Filter>
     </Image>
   </ItemGroup>

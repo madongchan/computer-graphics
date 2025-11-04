@@ -49,6 +49,9 @@ private:
 		XMFLOAT3 position;
 		XMFLOAT2 texture;
 		XMFLOAT3 normal;
+		// ★ 범프 맵핑을 위한 Tangent, Binormal 추가
+		XMFLOAT3 tangent;
+		XMFLOAT3 binormal;
 	};
 
 public:

@@ -156,6 +156,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="BumpMapShaderClass.cpp" />
     <ClCompile Include="cameraclass.cpp" />
     <ClCompile Include="d3dclass.cpp" />
     <ClCompile Include="DDSTextureLoader.cpp" />
@@ -169,11 +170,13 @@
     <ClCompile Include="SkyboxShaderClass.cpp" />
     <ClCompile Include="soundclass.cpp" />
     <ClCompile Include="systemclass.cpp" />
+    <ClCompile Include="TextureArrayClass.cpp" />
     <ClCompile Include="textureclass.cpp" />
     <ClCompile Include="timerclass.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AlignedAllocationPolicy.h" />
+    <ClInclude Include="BumpMapShaderClass.h" />
     <ClInclude Include="cameraclass.h" />
     <ClInclude Include="d3dclass.h" />
     <ClInclude Include="DDSTextureLoader.h" />
@@ -186,14 +189,17 @@
     <ClInclude Include="SkyboxShaderClass.h" />
     <ClInclude Include="soundclass.h" />
     <ClInclude Include="systemclass.h" />
+    <ClInclude Include="TextureArrayClass.h" />
     <ClInclude Include="textureclass.h" />
     <ClInclude Include="timerclass.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="data\cube.fbx" />
+    <None Include="data\Floor.fbx" />
     <None Include="data\phongLightShader.hlsl">
       <FileType>Document</FileType>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+      </ExcludedFromBuild>
     </None>
     <None Include="data\Road.fbx" />
     <None Include="data\SM_Prop_Benchpress_01.fbx" />
@@ -201,13 +207,21 @@
     <None Include="data\SM_Prop_Propane_01.fbx" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="data\Floor_color.dds" />
+    <Image Include="data\Floor_normal.dds" />
     <Image Include="data\PolygonBattleRoyale_Texture_01_A.dds" />
     <Image Include="data\Road.dds" />
     <Image Include="data\skybox.dds" />
   </ItemGroup>
   <ItemGroup>
     <None Include="data\skybox.hlsl">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+      </ExcludedFromBuild>
+      <FileType>Document</FileType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="data\bumpmapShader.hlsl">
       <FileType>Document</FileType>
     </None>
   </ItemGroup>

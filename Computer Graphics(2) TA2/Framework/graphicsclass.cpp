@@ -15,6 +15,8 @@ GraphicsClass::GraphicsClass()
 	m_LightShader = 0;
 	m_Skybox = 0;
 	m_SkyboxShader = 0;
+	m_BumpMapShader = 0;
+	m_GroundTextures = 0;
 	m_Light = 0;
 	m_rotation = 0.0f;
 	m_isAmbientOn = true;
@@ -93,12 +95,34 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	m_GroundModel = new ModelClass;
 	if (!m_GroundModel) { return false; }
 	result = m_GroundModel->Initialize(m_D3D->GetDevice(),
-		"./data/Road.fbx",
-		L"./data/PolygonBattleRoyale_Texture_01_A.dds");
+		"./data/Floor.fbx",
+		L"./data/PolygonBattleRoyale_Texture_01_A.dds");// (이 텍스처는 무시됨)
 	if (!result) { return false; }
 	if(!result)
 	{
 		MessageBox(hwnd, L"Could not initialize the model object.", L"Error", MB_OK);
+		return false;
+	}
+
+	// 범프맵 셰이더 초기화
+	m_BumpMapShader = new BumpMapShaderClass;
+	if (!m_BumpMapShader) { return false; }
+	result = m_BumpMapShader->Initialize(m_D3D->GetDevice(), hwnd);
+	if (!result)
+	{
+		MessageBox(hwnd, L"Could not initialize the bump map shader object.", L"Error", MB_OK);
+		return false;
+	}
+
+	//  지면 텍스처 배열 초기화
+	m_GroundTextures = new TextureArrayClass;
+	if (!m_GroundTextures) { return false; }
+	result = m_GroundTextures->Initialize(m_D3D->GetDevice(),
+		L"./data/Floor_color.dds",  // (지면 색상 텍스처)
+		L"./data/Floor_normal.dds"); // (지면 노멀맵 텍스처)
+	if (!result)
+	{
+		MessageBox(hwnd, L"Could not initialize the ground texture array object.", L"Error", MB_OK);
 		return false;
 	}
 
@@ -176,6 +200,18 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 }
 void GraphicsClass::Shutdown()
 {
+	if (m_BumpMapShader)
+	{
+		m_BumpMapShader->Shutdown();
+		delete m_BumpMapShader;
+		m_BumpMapShader = 0;
+	}
+	if (m_GroundTextures)
+	{
+		m_GroundTextures->Shutdown();
+		delete m_GroundTextures;
+		m_GroundTextures = 0;
+	}
 	if (m_Skybox)
 	{
 		m_Skybox->Shutdown();
@@ -443,17 +479,15 @@ bool GraphicsClass::Render(float rotation)
 
 	// 4.4 m_GroundModel 그리기 (바닥)
 	worldMatrix = XMMatrixIdentity();
-	worldMatrix *= XMMatrixScaling(0.1f, 0.1f, 0.1f); // 바닥 크기
-	worldMatrix *= XMMatrixTranslation(0.0f, -1.0f, 0.0f); // 바닥 위치
+	worldMatrix *= XMMatrixScaling(0.05f, 0.001f, 0.05f); // 바닥 크기
+	worldMatrix *= XMMatrixTranslation(0.0f, -2.0f, 0.0f); // 바닥 위치
 
 	m_GroundModel->Render(m_D3D->GetDeviceContext());
-	result = m_LightShader->Render(m_D3D->GetDeviceContext(),
+	// (LightShader 대신 BumpMapShader 호출)
+	result = m_BumpMapShader->Render(m_D3D->GetDeviceContext(),
 		m_GroundModel->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix,
-		m_GroundModel->GetTexture(), m_Light->GetDirection(), m_Light->GetAmbientColor(),
-		m_Light->GetDiffuseColor(), m_Camera->GetPosition(), m_Light->GetSpecularColor(),
-		m_Light->GetSpecularPower(),
-		m_isAmbientOn, m_isDiffuseOn, m_isSpecularOn,
-		pointLightPositions, pointLightColors, m_pointLightIntensity);
+		m_GroundTextures->GetTextureArray(), // (색상+노멀맵 텍스처 배열 전달)
+		m_Light->GetDirection(), m_Light->GetAmbientColor(), m_Light->GetDiffuseColor());
 	if (!result) { return false; }
 
 	// 5. 씬 종료
