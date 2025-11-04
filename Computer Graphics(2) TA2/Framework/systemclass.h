@@ -22,6 +22,7 @@
 ///////////////////////
 #include "inputclass.h"
 #include "graphicsclass.h"
+#include "soundclass.h"
 #include "timerclass.h"
 
 
@@ -53,6 +54,7 @@ private:
 
 	InputClass* m_Input;
 	GraphicsClass* m_Graphics;
+	SoundClass* m_Sound;
 	TimerClass* m_Timer;
 
 	// 윈도우 크기 및 위치 저장을 위한 멤버 변수
