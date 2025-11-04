@@ -14,6 +14,9 @@ D3DClass::D3DClass()
 	m_depthStencilState = 0;
 	m_depthStencilView = 0;
 	m_rasterState = 0;
+
+	m_rasterStateNoCulling = 0;
+	m_depthStateLessEqual = 0;
 }
 
 
@@ -279,6 +282,22 @@ bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hw
 		return false;
 	}
 
+	// ★ 스카이박스용 "Less Equal" 깊이 상태 생성
+	//
+	D3D11_DEPTH_STENCIL_DESC depthStencilDescLessEqual;
+	ZeroMemory(&depthStencilDescLessEqual, sizeof(D3D11_DEPTH_STENCIL_DESC));
+	depthStencilDescLessEqual.DepthEnable = true;
+	depthStencilDescLessEqual.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+	depthStencilDescLessEqual.DepthFunc = D3D11_COMPARISON_LESS_EQUAL; // 핵심: Z=1.0일 때 덮어쓰기 허용
+	depthStencilDescLessEqual.StencilEnable = false;
+
+	result = m_device->CreateDepthStencilState(&depthStencilDescLessEqual, &m_depthStateLessEqual);
+	if (FAILED(result))
+	{
+		return false;
+	}
+	// ---
+	// 
 	// Set the depth stencil state.
 	m_deviceContext->OMSetDepthStencilState(m_depthStencilState, 1);
 
@@ -322,6 +341,22 @@ bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hw
 	// Now set the rasterizer state.
 	m_deviceContext->RSSetState(m_rasterState);
 	
+	// ★ 스카이박스용 "No Culling" 래스터라이저 상태 생성
+	//
+	D3D11_RASTERIZER_DESC rasterDescNoCulling;
+	ZeroMemory(&rasterDescNoCulling, sizeof(D3D11_RASTERIZER_DESC));
+	rasterDescNoCulling.FillMode = D3D11_FILL_SOLID;
+	rasterDescNoCulling.CullMode = D3D11_CULL_NONE; // 핵심: 컬링 없음
+	rasterDescNoCulling.FrontCounterClockwise = false;
+	rasterDescNoCulling.DepthClipEnable = true;
+
+	result = m_device->CreateRasterizerState(&rasterDescNoCulling, &m_rasterStateNoCulling);
+	if (FAILED(result))
+	{
+		return false;
+	}
+	// ---
+	// 
 	// Setup the viewport for rendering.
     viewport.Width = (float)screenWidth;
     viewport.Height = (float)screenHeight;
@@ -405,7 +440,18 @@ void D3DClass::Shutdown()
 		m_swapChain->Release();
 		m_swapChain = 0;
 	}
-
+	// ★ 스카이박스용 상태 객체 해제
+	if (m_rasterStateNoCulling)
+	{
+		m_rasterStateNoCulling->Release();
+		m_rasterStateNoCulling = 0;
+	}
+	if (m_depthStateLessEqual)
+	{
+		m_depthStateLessEqual->Release();
+		m_depthStateLessEqual = 0;
+	}
+	// ---
 	return;
 }
 
@@ -488,3 +534,25 @@ void D3DClass::GetVideoCardInfo(char* cardName, int& memory)
 	memory = m_videoCardMemory;
 	return;
 }
+
+// ★ 렌더 상태 변경 함수 4개 구현
+void D3DClass::TurnOnNoCulling()
+{
+	m_deviceContext->RSSetState(m_rasterStateNoCulling);
+}
+
+void D3DClass::TurnOnBackCulling()
+{
+	m_deviceContext->RSSetState(m_rasterState);
+}
+
+void D3DClass::TurnOnDepthLessEqual()
+{
+	m_deviceContext->OMSetDepthStencilState(m_depthStateLessEqual, 1);
+}
+
+void D3DClass::TurnOffDefaultDepth()
+{
+	m_deviceContext->OMSetDepthStencilState(m_depthStencilState, 1);
+}
+// ---

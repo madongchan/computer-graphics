@@ -13,6 +13,8 @@ GraphicsClass::GraphicsClass()
 	m_Model3 = 0;
 	m_GroundModel = 0;
 	m_LightShader = 0;
+	m_Skybox = 0;
+	m_SkyboxShader = 0;
 	m_Light = 0;
 	m_rotation = 0.0f;
 	m_isAmbientOn = true;
@@ -142,10 +144,50 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	// 포인트 라이트 파란색, 오른쪽 위
 	m_Light->SetPointLightColor(2, 0.0f, 0.0f, 1.0f, 1.0f);
 	m_Light->SetPointLightPosition(2, 3.0f, 0.0f, 0.0f);
+
+	// 스카이박스 셰이더 초기화
+	m_SkyboxShader = new SkyboxShaderClass;
+	if (!m_SkyboxShader)
+	{
+		return false;
+	}
+	result = m_SkyboxShader->Initialize(m_D3D->GetDevice(), hwnd);
+	if (!result)
+	{
+		MessageBox(hwnd, L"Could not initialize the skybox shader object.", L"Error", MB_OK);
+		return false;
+	}
+
+	// 스카이박스 모델 초기화
+	m_Skybox = new SkyboxClass;
+	if (!m_Skybox)
+	{
+		return false;
+	}
+	// (NVIDIA 도구로 변환한 큐브맵 .dds 파일 경로를 지정하세요)
+	result = m_Skybox->Initialize(m_D3D->GetDevice(), L"./data/skybox.dds");
+	if (!result)
+	{
+		MessageBox(hwnd, L"Could not initialize the skybox model object.", L"Error", MB_OK);
+		return false;
+	}
+
 	return true;
 }
 void GraphicsClass::Shutdown()
 {
+	if (m_Skybox)
+	{
+		m_Skybox->Shutdown();
+		delete m_Skybox;
+		m_Skybox = 0;
+	}
+	if (m_SkyboxShader)
+	{
+		m_SkyboxShader->Shutdown();
+		delete m_SkyboxShader;
+		m_SkyboxShader = 0;
+	}
 	// Release the light object.
 	if (m_Light)
 	{
@@ -223,18 +265,18 @@ bool GraphicsClass::Frame(InputClass* Input, double deltaTime)
 	if (Input->IsKeyToggle(DIK_NUMPAD5)) // 5번 키
 	{
 		// (간단한 토글을 위해 bool 플래그가 필요하지만, 우선 IsKeyPressed로 대체)
-		// m_isAmbientOn = !m_isAmbientOn; 
+		 m_isAmbientOn = !m_isAmbientOn; 
 	}
 	if (Input->IsKeyToggle(DIK_NUMPAD6)) // 6번 키
 	{
-		// m_isDiffuseOn = !m_isDiffuseOn;
+		 m_isDiffuseOn = !m_isDiffuseOn;
 	}
 	if (Input->IsKeyToggle(DIK_NUMPAD7)) // 7번 키
 	{
-		// m_isSpecularOn = !m_isSpecularOn;
+		 m_isSpecularOn = !m_isSpecularOn;
 	}
 
-	if (Input->IsKeyToggle(DIK_NUMPAD8)) // '8' - Point Light Intensity 감소
+	if (Input->IsKeyPressed(DIK_NUMPAD8)) // '8' - Point Light Intensity 감소
 	{
 		m_pointLightIntensity -= 0.05f; // 감소량 (조절 가능)
 		if (m_pointLightIntensity < 0.0f) // 최소값 0으로 제한
@@ -242,7 +284,7 @@ bool GraphicsClass::Frame(InputClass* Input, double deltaTime)
 			m_pointLightIntensity = 0.0f;
 		}
 	}
-	if (Input->IsKeyToggle(DIK_NUMPAD9)) // '9' - Point Light Intensity 증가
+	if (Input->IsKeyPressed(DIK_NUMPAD9)) // '9' - Point Light Intensity 증가
 	{
 		m_pointLightIntensity += 0.05f; // 증가량 (조절 가능)
 		if (m_pointLightIntensity > 5.0f) // 최대값 5로 제한
@@ -321,6 +363,27 @@ bool GraphicsClass::Render(float rotation)
 	m_Camera->GetViewMatrix(viewMatrix);
 	m_D3D->GetProjectionMatrix(projectionMatrix);
 
+	// 4. 스카이박스 그리기 (물체보다 먼저)
+	// -------------------------------------------------
+	// 스카이박스의 월드 행렬을 항상 카메라 위치로 설정
+	worldMatrix = XMMatrixTranslationFromVector(m_Camera->GetPositionXM());
+
+	// 렌더 상태 변경: 컬링 끄기 + 깊이 함수 LESS_EQUAL
+	m_D3D->TurnOnNoCulling();
+	m_D3D->TurnOnDepthLessEqual();
+
+	// 스카이박스 버퍼 설정 및 셰이더 호출
+	m_Skybox->Render(m_D3D->GetDeviceContext());
+	result = m_SkyboxShader->Render(m_D3D->GetDeviceContext(), m_Skybox->GetIndexCount(),
+		worldMatrix, viewMatrix, projectionMatrix,
+		m_Skybox->GetTexture());
+	if (!result) { return false; }
+
+	// 렌더 상태 복구: 컬링 켜기 + 깊이 함수 기본값
+	m_D3D->TurnOnBackCulling();
+	m_D3D->TurnOffDefaultDepth();
+	// -------------------------------------------------
+	// 
 	// m_Light 객체에서 3개의 포인트 라이트 위치/색상 배열을 가져옵니다.
 	XMFLOAT4 pointLightPositions[NUM_POINT_LIGHTS];
 	XMFLOAT4 pointLightColors[NUM_POINT_LIGHTS];

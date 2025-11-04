@@ -43,6 +43,13 @@ public:
 	ID3D11Device* GetDevice();
 	ID3D11DeviceContext* GetDeviceContext();
 
+	// 스카이박스용 렌더 상태 제어 함수
+	void TurnOnNoCulling();
+	void TurnOnBackCulling();
+	void TurnOnDepthLessEqual();
+	void TurnOffDefaultDepth();
+	// ---
+
 	void GetProjectionMatrix(XMMATRIX&);
 	void GetWorldMatrix(XMMATRIX&);
 	void GetOrthoMatrix(XMMATRIX&);
@@ -61,6 +68,10 @@ private:
 	ID3D11DepthStencilState* m_depthStencilState;
 	ID3D11DepthStencilView* m_depthStencilView;
 	ID3D11RasterizerState* m_rasterState;
+	// 스카이박스용 렌더 상태 객체들
+	ID3D11RasterizerState* m_rasterStateNoCulling;
+	ID3D11DepthStencilState* m_depthStateLessEqual;
+
 	XMMATRIX m_projectionMatrix;
 	XMMATRIX m_worldMatrix;
 	XMMATRIX m_orthoMatrix;

@@ -15,6 +15,8 @@
 #include "lightclass.h"      
 #include "inputclass.h"
 
+#include "skyboxclass.h"
+#include "skyboxshaderclass.h"
 
 /////////////
 // GLOBALS //
@@ -54,6 +56,9 @@ private:
 	
 	LightShaderClass* m_LightShader;
 	LightClass* m_Light;
+
+	SkyboxClass* m_Skybox;
+	SkyboxShaderClass* m_SkyboxShader;
 
 	float m_rotation;
 	// Lighting toggles
