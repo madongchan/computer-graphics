@@ -20,7 +20,7 @@ CameraClass::CameraClass()
     // 점프 및 중력 관련 초기화
     m_verticalVelocity = 0.0f;
     m_gravity = -19.8f;           // 중력 가속도 (음수값)
-    m_jumpForce = 30.8f;           // 점프 초기 속도
+    m_jumpForce = 13.8f;           // 점프 초기 속도
     m_groundLevel = 5.0f;         // 기본 지면 높이
     m_isGrounded = true;
     m_canJump = true;

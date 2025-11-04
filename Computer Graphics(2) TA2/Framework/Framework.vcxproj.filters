@@ -47,6 +47,9 @@
     <ClCompile Include="timerclass.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="soundclass.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="d3dclass.h">
@@ -83,6 +86,9 @@
       <Filter>소스 파일</Filter>
     </ClInclude>
     <ClInclude Include="timerclass.h">
+      <Filter>소스 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="soundclass.h">
       <Filter>소스 파일</Filter>
     </ClInclude>
   </ItemGroup>
