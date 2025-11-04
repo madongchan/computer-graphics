@@ -2,7 +2,7 @@
 // Filename: graphicsclass.cpp
 ////////////////////////////////////////////////////////////////////////////////
 #include "graphicsclass.h"
-#include <dinput.h>
+#include <dinput.h> // DIK_ 키 코드를 사용하기 위해 include
 
 GraphicsClass::GraphicsClass()
 {
@@ -60,7 +60,8 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	// Set the initial position of the camera.
-	m_Camera->SetPosition(0.0f, 1.0f, -7.0f);	// for cube model
+	m_Camera->SetPosition(0.0f, 0.0f, -7.0f); // 바닥(-1.0f)보다 높은 곳에서 시작
+	m_Camera->SetGroundLevel(0.0f); // 바닥 모델의 Y위치와 일치시킴
 	
 	// 모델 1
 	m_Model1 = new ModelClass;
@@ -130,19 +131,15 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	// Point Light 초기화
 	m_pointLightIntensity = 1.0f;
 
-	// --- ★ (수정 2) 포인트 라이트 3개 초기값 설정 ★ ---
-	//
-	// (위치와 색상은 예시입니다. 동찬님께서 원하시는 값으로 설정하세요.)
-
-	// 포인트 라이트 0 (예: 빨간색, 왼쪽 위)
+	// 포인트 라이트 빨간색, 왼쪽 위
 	m_Light->SetPointLightColor(0, 1.0f, 0.0f, 0.0f, 1.0f); // R, G, B, A
 	m_Light->SetPointLightPosition(0, -3.0f, 0.0f, 0.0f);   // X, Y, Z
 
-	// 포인트 라이트 1 (예: 녹색, 중앙 위)
+	// 포인트 라이트 녹색, 중앙 위
 	m_Light->SetPointLightColor(1, 0.0f, 1.0f, 0.0f, 1.0f);
 	m_Light->SetPointLightPosition(1, 0.0f, 0.0f, 0.0f);
 
-	// 포인트 라이트 2 (예: 파란색, 오른쪽 위)
+	// 포인트 라이트 파란색, 오른쪽 위
 	m_Light->SetPointLightColor(2, 0.0f, 0.0f, 1.0f, 1.0f);
 	m_Light->SetPointLightPosition(2, 3.0f, 0.0f, 0.0f);
 	return true;
@@ -209,38 +206,43 @@ void GraphicsClass::Shutdown()
 }
 
 
-bool GraphicsClass::Frame(InputClass* Input)
+bool GraphicsClass::Frame(InputClass* Input, double deltaTime)
 {
 	bool result;
 
-	// (매 프레임 조금씩 회전값을 누적시킵니다)
+	// 카메라 입력 처리 및 중력 적용
+	HandleInput(Input, deltaTime);
+	m_Camera->ApplyGravity(static_cast<float>(deltaTime));
+
 	m_rotation += (float)XM_PI * 0.005f; // 속도는 이 값으로 조절
 	if (m_rotation > (2.0f * (float)XM_PI))
 	{
 		m_rotation -= (2.0f * (float)XM_PI);
 	}
-	if (Input->IsKeyPressed(0x35) || Input->IsKeyPressed(VK_NUMPAD5)) // 5번 키
+	
+	if (Input->IsKeyToggle(DIK_NUMPAD5)) // 5번 키
 	{
-		m_isAmbientOn = !m_isAmbientOn;
+		// (간단한 토글을 위해 bool 플래그가 필요하지만, 우선 IsKeyPressed로 대체)
+		// m_isAmbientOn = !m_isAmbientOn; 
 	}
-	if (Input->IsKeyPressed(0x36) || Input->IsKeyPressed(VK_NUMPAD6)) // 6번 키
+	if (Input->IsKeyToggle(DIK_NUMPAD6)) // 6번 키
 	{
-		m_isDiffuseOn = !m_isDiffuseOn;
+		// m_isDiffuseOn = !m_isDiffuseOn;
 	}
-	if (Input->IsKeyPressed(0x37) || Input->IsKeyPressed(VK_NUMPAD7)) // 7번 키
+	if (Input->IsKeyToggle(DIK_NUMPAD7)) // 7번 키
 	{
-		m_isSpecularOn = !m_isSpecularOn;
+		// m_isSpecularOn = !m_isSpecularOn;
 	}
-	if (Input->IsKeyDown(0x38) || Input->IsKeyDown(VK_NUMPAD8)) // '8' - Point Light Intensity 증가
+
+	if (Input->IsKeyToggle(DIK_NUMPAD8)) // '8' - Point Light Intensity 감소
 	{
-		// 키를 계속 누르고 있어도 값이 계속 바뀌도록 IsKeyPressed 대신 IsKeyDown 사용
 		m_pointLightIntensity -= 0.05f; // 감소량 (조절 가능)
 		if (m_pointLightIntensity < 0.0f) // 최소값 0으로 제한
 		{
 			m_pointLightIntensity = 0.0f;
 		}
 	}
-	if (Input->IsKeyDown(0x39) || Input->IsKeyDown(VK_NUMPAD9)) // '9' - Point Light Intensity 감소
+	if (Input->IsKeyToggle(DIK_NUMPAD9)) // '9' - Point Light Intensity 증가
 	{
 		m_pointLightIntensity += 0.05f; // 증가량 (조절 가능)
 		if (m_pointLightIntensity > 5.0f) // 최대값 5로 제한
@@ -260,6 +262,49 @@ bool GraphicsClass::Frame(InputClass* Input)
 	return true;
 }
 
+// 카메라 입력을 처리하는 헬퍼 함수
+void GraphicsClass::HandleInput(InputClass* Input, double deltaTime)
+{
+	long mouseX = 0, mouseY = 0;
+	Input->GetMouseDelta(mouseX, mouseY); // 마우스 상대 이동량(Delta) 가져오기
+
+	// 마우스 이동량에 따라 카메라 Yaw(Y축 회전), Pitch(X축 회전) 조절
+	if (mouseX != 0)
+	{
+		m_Camera->AdjustYaw(static_cast<float>(mouseX) * m_mouseSensitivity);
+	}
+	if (mouseY != 0)
+	{
+		m_Camera->AdjustPitch(static_cast<float>(mouseY) * m_mouseSensitivity);
+	}
+
+	// DeltaTime을 반영한 카메라 이동 속도 계산
+	float moveSpeed = m_cameraMoveSpeed * static_cast<float>(deltaTime);
+
+	// WASD 키 입력에 따라 카메라 이동
+	if (Input->IsKeyPressed(DIK_W))
+	{
+		m_Camera->MoveForward(moveSpeed); // 전진
+	}
+	if (Input->IsKeyPressed(DIK_S))
+	{
+		m_Camera->MoveForward(-moveSpeed); // 후진
+	}
+	if (Input->IsKeyPressed(DIK_A))
+	{
+		m_Camera->MoveRight(-moveSpeed); // 좌측 이동
+	}
+	if (Input->IsKeyPressed(DIK_D))
+	{
+		m_Camera->MoveRight(moveSpeed); // 우측 이동
+	}
+
+	// Space 키 입력에 따라 점프
+	if (Input->IsKeyPressed(DIK_SPACE))
+	{
+		m_Camera->Jump();
+	}
+}
 
 bool GraphicsClass::Render(float rotation)
 {
@@ -276,7 +321,6 @@ bool GraphicsClass::Render(float rotation)
 	m_Camera->GetViewMatrix(viewMatrix);
 	m_D3D->GetProjectionMatrix(projectionMatrix);
 
-	// --- ★ (수정 4) 포인트 라이트 데이터 준비 (배열) ★ ---
 	// m_Light 객체에서 3개의 포인트 라이트 위치/색상 배열을 가져옵니다.
 	XMFLOAT4 pointLightPositions[NUM_POINT_LIGHTS];
 	XMFLOAT4 pointLightColors[NUM_POINT_LIGHTS];

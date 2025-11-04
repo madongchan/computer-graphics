@@ -8,6 +8,12 @@ SystemClass::SystemClass()
 {
 	m_Input = 0;
 	m_Graphics = 0;
+	m_Timer = 0;
+
+	m_screenWidth = 0;
+	m_screenHeight = 0;
+	m_posX = 0;
+	m_posY = 0;
 }
 
 
@@ -23,16 +29,15 @@ SystemClass::~SystemClass()
 
 bool SystemClass::Initialize()
 {
-	int screenWidth, screenHeight;
 	bool result;
 
 
 	// Initialize the width and height of the screen to zero before sending the variables into the function.
-	screenWidth = 0;
-	screenHeight = 0;
+	m_screenWidth = 0;
+	m_screenHeight = 0;
 
 	// Initialize the windows api.
-	InitializeWindows(screenWidth, screenHeight);
+	InitializeWindows(m_screenWidth, m_screenHeight);
 
 	// Create the input object.  This object will be used to handle reading the keyboard input from the user.
 	m_Input = new InputClass;
@@ -42,7 +47,7 @@ bool SystemClass::Initialize()
 	}
 
 	// Initialize the input object.
-	m_Input->Initialize();
+	result = m_Input->Initialize(m_hinstance, m_hwnd, m_screenWidth, m_screenHeight);
 
 	// Create the graphics object.  This object will handle rendering all the graphics for this application.
 	m_Graphics = new GraphicsClass;
@@ -52,12 +57,17 @@ bool SystemClass::Initialize()
 	}
 
 	// Initialize the graphics object.
-	result = m_Graphics->Initialize(screenWidth, screenHeight, m_hwnd);
+	result = m_Graphics->Initialize(m_screenWidth, m_screenHeight, m_hwnd);
 	if(!result)
 	{
 		return false;
 	}
-	
+	m_Timer = new TimerClass;
+	if (!m_Timer)
+	{
+		return false;
+	}
+	m_Timer->Initialize();
 	return true;
 }
 
@@ -75,10 +85,15 @@ void SystemClass::Shutdown()
 	// Release the input object.
 	if(m_Input)
 	{
+		m_Input->Shutdown();
 		delete m_Input;
 		m_Input = 0;
 	}
-
+	if(m_Timer)
+	{
+		delete m_Timer;
+		m_Timer = 0;
+	}
 	// Shutdown the window.
 	ShutdownWindows();
 	
@@ -113,37 +128,47 @@ void SystemClass::Run()
 		}
 		else
 		{
+			double deltaTime = m_Timer->GetDeltaTime();
 			// Otherwise do the frame processing.
-			result = Frame();
+			result = Frame(deltaTime);
 			if(!result)
 			{
 				done = true;
 			}
 		}
-
+		// 매 프레임 마우스 커서를 창 중앙으로 고정
+		// (m_posX, m_posY는 InitializeWindows에서 계산된 윈도우의 '화면' 좌표)
+		SetCursorPos(m_posX + (m_screenWidth / 2), m_posY + (m_screenHeight / 2));
 	}
 
 	return;
 }
 
 
-bool SystemClass::Frame()
+bool SystemClass::Frame(double deltaTime)
 {
 	bool result;
 
+	// 1. (입력) DirectInput으로 키보드/마우스 상태 읽기
+	result = m_Input->Frame();
+	if (!result)
+	{
+		return false;
+	}
+	// 2. (입력 처리) ESC 키 확인
+	if (m_Input->IsEscapePressed())
+	{
+		return false;
+	}
 
-	// Check if the user pressed escape and wants to exit the application.
-	if(m_Input->IsKeyDown(VK_ESCAPE))
+	// 3. (로직/렌더링) Graphics 객체 프레임 처리 (deltaTime 전달)
+	result = m_Graphics->Frame(m_Input, deltaTime);
+	if (!result)
 	{
 		return false;
 	}
-	// Do the frame processing for the graphics object.
-	result = m_Graphics->Frame(m_Input);
-	if(!result)
-	{
-		return false;
-	}
-	m_Input->Update();
+
+	return true;
 
 	return true;
 }
@@ -153,22 +178,6 @@ LRESULT CALLBACK SystemClass::MessageHandler(HWND hwnd, UINT umsg, WPARAM wparam
 {
 	switch(umsg)
 	{
-		// Check if a key has been pressed on the keyboard.
-		case WM_KEYDOWN:
-		{
-			// If a key is pressed send it to the input object so it can record that state.
-			m_Input->KeyDown((unsigned int)wparam);
-			return 0;
-		}
-
-		// Check if a key has been released on the keyboard.
-		case WM_KEYUP:
-		{
-			// If a key is released then send it to the input object so it can unset the state for that key.
-			m_Input->KeyUp((unsigned int)wparam);
-			return 0;
-		}
-
 		// Any other messages send to the default message handler as our application won't make use of them.
 		default:
 		{
@@ -182,8 +191,8 @@ void SystemClass::InitializeWindows(int& screenWidth, int& screenHeight)
 {
 	WNDCLASSEX wc;
 	DEVMODE dmScreenSettings;
-	int posX, posY;
-
+	// 로컬 변수 posX, posY 제거 (멤버 m_posX, m_posY 사용)
+	// int posX, posY;
 
 	// Get an external pointer to this object.	
 	ApplicationHandle = this;
@@ -212,8 +221,8 @@ void SystemClass::InitializeWindows(int& screenWidth, int& screenHeight)
 	RegisterClassEx(&wc);
 
 	// Determine the resolution of the clients desktop screen.
-	screenWidth  = GetSystemMetrics(SM_CXSCREEN);
-	screenHeight = GetSystemMetrics(SM_CYSCREEN);
+	m_screenWidth = GetSystemMetrics(SM_CXSCREEN);
+	m_screenHeight = GetSystemMetrics(SM_CYSCREEN);
 
 	// Setup the screen settings depending on whether it is running in full screen or in windowed mode.
 	if(FULL_SCREEN)
@@ -230,7 +239,7 @@ void SystemClass::InitializeWindows(int& screenWidth, int& screenHeight)
 		ChangeDisplaySettings(&dmScreenSettings, CDS_FULLSCREEN);
 
 		// Set the position of the window to the top left corner.
-		posX = posY = 0;
+		m_posX = m_posY = 0;
 	}
 	else
 	{
@@ -239,14 +248,14 @@ void SystemClass::InitializeWindows(int& screenWidth, int& screenHeight)
 		screenHeight = 600;
 
 		// Place the window in the middle of the screen.
-		posX = (GetSystemMetrics(SM_CXSCREEN) - screenWidth)  / 2;
-		posY = (GetSystemMetrics(SM_CYSCREEN) - screenHeight) / 2;
+		m_posX = (GetSystemMetrics(SM_CXSCREEN) - m_screenWidth) / 2;
+		m_posY = (GetSystemMetrics(SM_CYSCREEN) - m_screenHeight) / 2;
 	}
 
 	// Create the window with the screen settings and get the handle to it.
 	m_hwnd = CreateWindowEx(WS_EX_APPWINDOW, m_applicationName, m_applicationName, 
 						    WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_POPUP,
-						    posX, posY, screenWidth, screenHeight, NULL, NULL, m_hinstance, NULL);
+							m_posX, m_posY, screenWidth, screenHeight, NULL, NULL, m_hinstance, NULL);
 
 	// Bring the window up on the screen and set it as main focus.
 	ShowWindow(m_hwnd, SW_SHOW);
@@ -255,6 +264,9 @@ void SystemClass::InitializeWindows(int& screenWidth, int& screenHeight)
 
 	// Hide the mouse cursor.
 	ShowCursor(false);
+
+	screenWidth = m_screenWidth;
+	screenHeight = m_screenHeight;
 
 	return;
 }

@@ -22,6 +22,7 @@
 ///////////////////////
 #include "inputclass.h"
 #include "graphicsclass.h"
+#include "timerclass.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -41,7 +42,7 @@ public:
 	LRESULT CALLBACK MessageHandler(HWND, UINT, WPARAM, LPARAM);
 
 private:
-	bool Frame();
+	bool Frame(double deltaTime);
 	void InitializeWindows(int&, int&);
 	void ShutdownWindows();
 
@@ -52,6 +53,11 @@ private:
 
 	InputClass* m_Input;
 	GraphicsClass* m_Graphics;
+	TimerClass* m_Timer;
+
+	// 윈도우 크기 및 위치 저장을 위한 멤버 변수
+	int m_screenWidth, m_screenHeight;
+	int m_posX, m_posY;
 };
 
 

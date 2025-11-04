@@ -167,6 +167,7 @@
     <ClCompile Include="modelclass.cpp" />
     <ClCompile Include="systemclass.cpp" />
     <ClCompile Include="textureclass.cpp" />
+    <ClCompile Include="timerclass.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AlignedAllocationPolicy.h" />
@@ -180,6 +181,7 @@
     <ClInclude Include="modelclass.h" />
     <ClInclude Include="systemclass.h" />
     <ClInclude Include="textureclass.h" />
+    <ClInclude Include="timerclass.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="data\cube.fbx" />
