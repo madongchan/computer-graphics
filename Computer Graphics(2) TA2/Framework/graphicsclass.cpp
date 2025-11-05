@@ -22,6 +22,7 @@ GraphicsClass::GraphicsClass()
 	m_isAmbientOn = true;
 	m_isDiffuseOn = true;
 	m_isSpecularOn = true;
+	m_isNormalMapOn = true;
 	m_pointLightIntensity = 1.0f; // 기본 강도 1.0
 }
 
@@ -328,6 +329,11 @@ bool GraphicsClass::Frame(InputClass* Input, double deltaTime)
 			m_pointLightIntensity = 5.0f;
 		}
 	}
+	// 0번 키로 노말맵 토글
+	if (Input->IsKeyToggle(DIK_NUMPAD0)) // 0번 키
+	{
+		m_isNormalMapOn = !m_isNormalMapOn;
+	}
 
 	// Render the graphics scene.
 	// (기존 코드는 Render 호출이 없었지만, 여기서 해줘야 합니다)
@@ -487,7 +493,7 @@ bool GraphicsClass::Render(float rotation)
 	result = m_BumpMapShader->Render(m_D3D->GetDeviceContext(),
 		m_GroundModel->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix,
 		m_GroundTextures->GetTextureArray(), // (색상+노멀맵 텍스처 배열 전달)
-		m_Light->GetDirection(), m_Light->GetAmbientColor(), m_Light->GetDiffuseColor());
+		m_Light->GetDirection(), m_Light->GetAmbientColor(), m_Light->GetDiffuseColor(), m_isNormalMapOn);
 	if (!result) { return false; }
 
 	// 5. 씬 종료

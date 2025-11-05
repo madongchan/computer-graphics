@@ -37,6 +37,13 @@ struct VertexInputType
     float3 binormal : BINORMAL;
 };
 
+// 노멀맵  토글용 상수 버퍼
+cbuffer ToggleBuffer : register(b1)
+{
+    float isNormalMapOn; // 1.0f = true, 0.0f = false
+    float3 nomalpadding;
+};
+
 struct PixelInputType
 {
     float4 position : SV_POSITION;
@@ -90,32 +97,47 @@ PixelInputType BumpMapVertexShader(VertexInputType input)
 float4 BumpMapPixelShader(PixelInputType input) : SV_TARGET
 {
     float4 textureColor;
-    float4 bumpNormal;
     float3 lightDir;
     float lightIntensity;
     float4 color;
-    float3 normal;
+    float3 normal; // (최종 법선 벡터)
 
-    // 1. 텍스처 맵 (t0)과 노멀 맵 (t1)에서 샘플링
+    // 1. 텍스처 맵 (t0)에서 색상 샘플링 (공통)
     textureColor = shaderTextures[0].Sample(SampleType, input.tex);
-    bumpNormal = shaderTextures[1].Sample(SampleType, input.tex);
 
-    // 2. 노멀 맵 값 (0 ~ 1)을 법선 벡터 (-1 ~ +1)로 변환
-    bumpNormal = (bumpNormal * 2.0f) - 1.0f;
+    // 0번 키 토글(isNormalMapOn)에 따라 법선 결정
+    if (isNormalMapOn > 0.0f)
+    {
+        // --- A. 노멀맵 사용 (ON) ---
+        float4 bumpNormal;
+        
+        // 2. 노멀 맵 (t1)에서 샘플링
+        bumpNormal = shaderTextures[1].Sample(SampleType, input.tex);
 
-    // 3. TBN(Tangent-Binormal-Normal) 행렬 생성
-    float3x3 TBN = float3x3(normalize(input.tangent), normalize(input.binormal), normalize(input.normal));
+        // 3. 노멀 맵 값 (0 ~ 1)을 법선 벡터 (-1 ~ +1)로 변환
+        bumpNormal = (bumpNormal * 2.0f) - 1.0f;
+
+        // 4. TBN(Tangent-Binormal-Normal) 행렬 생성
+        float3x3 TBN = float3x3(normalize(input.tangent), normalize(input.binormal), normalize(input.normal));
     
-    // 4. 노멀 맵에서 읽은 법선(접선 공간)을 TBN 행렬을 이용해 월드 공간 법선으로 변환
-    normal = mul(bumpNormal.xyz, TBN);
-    normal = normalize(normal);
+        // 5. 노멀 맵에서 읽은 법선(접선 공간)을 월드 공간 법선으로 변환
+        normal = mul(bumpNormal.xyz, TBN);
+        normal = normalize(normal);
+    }
+    else
+    {
+        // --- B. 노멀맵 미사용 (OFF) ---
+        // 5. 정점에서 보간된 기본 법선을 그대로 사용
+        normal = normalize(input.normal);
+    }
+    // ---
 
-    // 5. 조명 계산 (기존 로직)
+    // 6. 조명 계산 (공통)
     lightDir = -lightDirection;
     lightIntensity = saturate(dot(normal, lightDir));
 
     color = saturate(ambientColor + (diffuseColor * lightIntensity));
-    color = color * textureColor; // (최종 색상 = 조명 * 텍스처 색상)
+    color = color * textureColor;
 
     return color;
 }
