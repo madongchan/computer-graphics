@@ -5,13 +5,14 @@
 /////////////
 // GLOBALS //
 /////////////
-Texture2D shaderTextures[2] : register(t0); // t0: Color, t1: Normal
+Texture2D shaderTextures[2] : register(t0); // 0: Color, 1: Normal
 SamplerState SampleType : register(s0);
 
+#define NUM_POINT_LIGHTS 3
 
-//////////////
-// TYPEDEFS //
-//////////////
+/////////////////////
+// CONSTANT BUFFERS //
+/////////////////////
 cbuffer MatrixBuffer : register(b0)
 {
     matrix worldMatrix;
@@ -19,15 +20,44 @@ cbuffer MatrixBuffer : register(b0)
     matrix projectionMatrix;
 };
 
-cbuffer LightBuffer : register(b0)
+// 조명 파라미터 (기본 조명)
+cbuffer LightBuffer : register(b1)
 {
     float4 ambientColor;
     float4 diffuseColor;
     float3 lightDirection;
+    float specularPower;
+    float4 specularColor;
+};
+
+// 카메라 위치 (Specular 계산용)
+cbuffer CameraBuffer : register(b2)
+{
+    float3 cameraPosition;
     float padding;
 };
 
-// (수정) VS_INPUT 구조체 확장 (Tangent, Binormal 추가)
+// 포인트 라이트 (다중 조명)
+cbuffer PointLightBuffer : register(b3)
+{
+    float4 pointLightPosition[NUM_POINT_LIGHTS];
+    float4 pointLightColor[NUM_POINT_LIGHTS];
+    float pointLightIntensity;
+    float3 pointLightPadding;
+};
+
+// ★ 통합 토글 버퍼 (조명 & 노멀맵 제어)
+cbuffer ToggleBuffer : register(b4)
+{
+    float isAmbientOn; // 5번 키
+    float isDiffuseOn; // 6번 키
+    float isSpecularOn; // 7번 키
+    float isNormalMapOn; // 0번 키
+};
+
+//////////////
+// TYPEDEFS //
+//////////////
 struct VertexInputType
 {
     float4 position : POSITION;
@@ -35,13 +65,6 @@ struct VertexInputType
     float3 normal : NORMAL;
     float3 tangent : TANGENT;
     float3 binormal : BINORMAL;
-};
-
-// 노멀맵  토글용 상수 버퍼
-cbuffer ToggleBuffer : register(b1)
-{
-    float isNormalMapOn; // 1.0f = true, 0.0f = false
-    float3 nomalpadding;
 };
 
 struct PixelInputType
@@ -52,8 +75,8 @@ struct PixelInputType
     float3 tangent : TANGENT;
     float3 binormal : BINORMAL;
     float3 viewDirection : TEXCOORD1;
+    float4 worldPosition : TEXCOORD2;
 };
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // Vertex Shader
@@ -61,23 +84,18 @@ struct PixelInputType
 PixelInputType BumpMapVertexShader(VertexInputType input)
 {
     PixelInputType output;
-    matrix worldViewProjection;
+    float4 worldPosition;
 
-	// 픽셀 셰이더에서 TBN 계산을 위해 월드 변환만 적용
+    input.position.w = 1.0f;
+
+    // 행렬 변환
     output.position = mul(input.position, worldMatrix);
-	
-	// 카메라 위치 계산 (월드 좌표계 기준)
-    float3 cameraPosition = float3(0.0f, 0.0f, 0.0f); // (참고: 이 셰이더는 카메라 위치를 안 받음)
-    output.viewDirection = cameraPosition - output.position.xyz;
-    output.viewDirection = normalize(output.viewDirection);
-
-	// WVP 변환
     output.position = mul(output.position, viewMatrix);
     output.position = mul(output.position, projectionMatrix);
-    
+
     output.tex = input.tex;
-    
-	// TBN 벡터를 월드 좌표계로 변환
+
+    // 법선, 접선, 종선 변환 (월드 공간)
     output.normal = mul(input.normal, (float3x3) worldMatrix);
     output.normal = normalize(output.normal);
 
@@ -87,9 +105,16 @@ PixelInputType BumpMapVertexShader(VertexInputType input)
     output.binormal = mul(input.binormal, (float3x3) worldMatrix);
     output.binormal = normalize(output.binormal);
 
+    // 픽셀 쉐이더 조명 계산용 월드 위치
+    worldPosition = mul(input.position, worldMatrix);
+    output.worldPosition = worldPosition;
+
+    // 카메라 방향 계산 (Specular용)
+    output.viewDirection = cameraPosition.xyz - worldPosition.xyz;
+    output.viewDirection = normalize(output.viewDirection);
+
     return output;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // Pixel Shader
@@ -100,44 +125,79 @@ float4 BumpMapPixelShader(PixelInputType input) : SV_TARGET
     float3 lightDir;
     float lightIntensity;
     float4 color;
-    float3 normal; // (최종 법선 벡터)
+    float3 normal;
+    float4 specular;
+    float3 reflection;
+    float4 diffuse = float4(0.0f, 0.0f, 0.0f, 0.0f);
+    float4 ambient = float4(0.0f, 0.0f, 0.0f, 0.0f);
 
-    // 1. 텍스처 맵 (t0)에서 색상 샘플링 (공통)
+    // 1. 텍스처 색상 샘플링
     textureColor = shaderTextures[0].Sample(SampleType, input.tex);
 
-    // 0번 키 토글(isNormalMapOn)에 따라 법선 결정
-    if (isNormalMapOn > 0.0f)
+    // 2. 노멀 벡터 결정 (노멀맵 사용 여부 분기)
+    if (isNormalMapOn > 0.1f)
     {
-        // --- A. 노멀맵 사용 (ON) ---
-        float4 bumpNormal;
-        
-        // 2. 노멀 맵 (t1)에서 샘플링
-        bumpNormal = shaderTextures[1].Sample(SampleType, input.tex);
-
-        // 3. 노멀 맵 값 (0 ~ 1)을 법선 벡터 (-1 ~ +1)로 변환
+        // [노멀맵 ON] 텍스처에서 법선을 가져와 변환
+        float4 bumpNormal = shaderTextures[1].Sample(SampleType, input.tex);
         bumpNormal = (bumpNormal * 2.0f) - 1.0f;
-
-        // 4. TBN(Tangent-Binormal-Normal) 행렬 생성
         float3x3 TBN = float3x3(normalize(input.tangent), normalize(input.binormal), normalize(input.normal));
-    
-        // 5. 노멀 맵에서 읽은 법선(접선 공간)을 월드 공간 법선으로 변환
         normal = mul(bumpNormal.xyz, TBN);
         normal = normalize(normal);
     }
     else
     {
-        // --- B. 노멀맵 미사용 (OFF) ---
-        // 5. 정점에서 보간된 기본 법선을 그대로 사용
+        // [노멀맵 OFF] 정점의 기본 법선 사용
         normal = normalize(input.normal);
     }
-    // ---
 
-    // 6. 조명 계산 (공통)
+    // 3. 앰비언트 조명
+    if (isAmbientOn > 0.1f)
+    {
+        ambient = ambientColor;
+    }
+
+    // 4. 디퓨즈(Diffuse) 조명 (Directional)
     lightDir = -lightDirection;
     lightIntensity = saturate(dot(normal, lightDir));
 
-    color = saturate(ambientColor + (diffuseColor * lightIntensity));
-    color = color * textureColor;
+    specular = float4(0.0f, 0.0f, 0.0f, 0.0f);
+
+    if (lightIntensity > 0.0f)
+    {
+        if (isDiffuseOn > 0.1f)
+        {
+            diffuse += (diffuseColor * lightIntensity);
+        }
+
+        // 5. 스펙큘러(Specular) 조명
+        if (isSpecularOn > 0.1f)
+        {
+            reflection = normalize(2 * lightIntensity * normal - lightDir);
+            specular = pow(saturate(dot(reflection, input.viewDirection)), specularPower) * specularColor;
+        }
+    }
+
+    // 6. 포인트 라이트 계산 (디퓨즈가 켜져있을 때만 추가)
+    if (isDiffuseOn > 0.1f)
+    {
+        for (int i = 0; i < NUM_POINT_LIGHTS; i++)
+        {
+            float3 pointLightVector = pointLightPosition[i].xyz - input.worldPosition.xyz;
+            float distSquared = dot(pointLightVector, pointLightVector);
+            pointLightVector = normalize(pointLightVector);
+
+            float pointLightFactor = saturate(dot(normal, pointLightVector));
+            float attenuation = 1.0f / (distSquared + 1.0f);
+
+            // 포인트 라이트 더하기 (색상 * 내적값 * 감쇠 * 전체강도)
+            diffuse += (pointLightColor[i] * pointLightFactor * attenuation * pointLightIntensity);
+        }
+    }
+
+    // 7. 최종 색상 합성
+    // (Ambient + Diffuse) * Texture + Specular
+    color = saturate(ambient + diffuse) * textureColor;
+    color = saturate(color + specular);
 
     return color;
 }

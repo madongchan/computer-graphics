@@ -86,6 +86,8 @@ bool SystemClass::Initialize()
 		return false;
 	}
 	m_Timer->Initialize();
+
+	m_isCameraControlMode = true;
 	return true;
 }
 
@@ -156,9 +158,12 @@ void SystemClass::Run()
 		}
 		// 매 프레임 마우스 커서를 창 중앙으로 고정
 		// (m_posX, m_posY는 InitializeWindows에서 계산된 윈도우의 '화면' 좌표)
-		SetCursorPos(m_posX + (m_screenWidth / 2), m_posY + (m_screenHeight / 2));
+		// 카메라 모드일 때만 마우스를 화면 중앙으로 강제 이동
+		if (m_isCameraControlMode)
+		{
+			SetCursorPos(m_posX + (m_screenWidth / 2), m_posY + (m_screenHeight / 2));
+		}
 	}
-
 	return;
 }
 
@@ -177,6 +182,23 @@ bool SystemClass::Frame(double deltaTime)
 	if (m_Input->IsEscapePressed())
 	{
 		return false;
+	}
+	if (m_Input->IsKeyToggle(DIK_F1))
+	{
+		m_isCameraControlMode = !m_isCameraControlMode;
+
+		if (m_isCameraControlMode)
+		{
+			// 게임 모드: 커서 숨기기 (카운트가 0보다 작아질 때까지)
+			while (ShowCursor(false) >= 0);
+			// 즉시 중앙으로 이동
+			SetCursorPos(m_posX + (m_screenWidth / 2), m_posY + (m_screenHeight / 2));
+		}
+		else
+		{
+			// UI 모드: 커서 보이기
+			while (ShowCursor(true) < 0);
+		}
 	}
 
 	// 3. (로직/렌더링) Graphics 객체 프레임 처리 (deltaTime 전달)

@@ -60,6 +60,8 @@ private:
 	// 윈도우 크기 및 위치 저장을 위한 멤버 변수
 	int m_screenWidth, m_screenHeight;
 	int m_posX, m_posY;
+
+	bool m_isCameraControlMode = true;
 };
 
 

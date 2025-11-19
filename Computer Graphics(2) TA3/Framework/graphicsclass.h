@@ -79,6 +79,8 @@ private:
 	// --- 카메라/마우스 속도 상수 추가 ★ ---
 	const float m_cameraMoveSpeed = 10.0f;
 	const float m_mouseSensitivity = 0.005f;
+
+	bool m_isCameraControlMode = true;
 };
 
 #endif

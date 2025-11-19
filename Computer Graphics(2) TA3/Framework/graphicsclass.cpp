@@ -290,14 +290,23 @@ bool GraphicsClass::Frame(InputClass* Input, double deltaTime)
 	bool result;
 
 	// 카메라 입력 처리 및 중력 적용
-	HandleInput(Input, deltaTime);
-	m_Camera->ApplyGravity(static_cast<float>(deltaTime));
+	// 토글 키로 카메라 컨트롤 모드 전환
+	if (Input->IsKeyToggle(DIK_F1))
+	{
+		m_isCameraControlMode = !m_isCameraControlMode;
+	}
+	if (m_isCameraControlMode)
+	{
+		HandleInput(Input, deltaTime);
+		m_Camera->ApplyGravity(static_cast<float>(deltaTime));
+	}
 
 	m_rotation += (float)XM_PI * 0.005f; // 속도는 이 값으로 조절
 	if (m_rotation > (2.0f * (float)XM_PI))
 	{
 		m_rotation -= (2.0f * (float)XM_PI);
 	}
+	
 	
 	if (Input->IsKeyToggle(DIK_NUMPAD5)) // 5번 키
 	{
@@ -491,9 +500,25 @@ bool GraphicsClass::Render(float rotation)
 	m_GroundModel->Render(m_D3D->GetDeviceContext());
 	// (LightShader 대신 BumpMapShader 호출)
 	result = m_BumpMapShader->Render(m_D3D->GetDeviceContext(),
-		m_GroundModel->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix,
-		m_GroundTextures->GetTextureArray(), // (색상+노멀맵 텍스처 배열 전달)
-		m_Light->GetDirection(), m_Light->GetAmbientColor(), m_Light->GetDiffuseColor(), m_isNormalMapOn);
+		m_GroundModel->GetIndexCount(),
+		worldMatrix, viewMatrix, projectionMatrix,
+		m_GroundTextures->GetTextureArray(),    // 텍스처 (Color + Normal)
+		m_Light->GetDirection(),                // 조명 방향
+		m_Light->GetAmbientColor(),             // Ambient Color
+		m_Light->GetDiffuseColor(),             // Diffuse Color
+		m_Camera->GetPosition(),                // Camera Pos (Specular용)
+		m_Light->GetSpecularColor(),            // Specular Color
+		m_Light->GetSpecularPower(),            // Specular Power
+
+		m_isAmbientOn,                          // 5번키 상태
+		m_isDiffuseOn,                          // 6번키 상태
+		m_isSpecularOn,                         // 7번키 상태
+		m_isNormalMapOn,                        // 0번키 상태 (BumpMap ON/OFF)
+
+		pointLightPositions,                    // 포인트 라이트 위치 배열
+		pointLightColors,                       // 포인트 라이트 색상 배열
+		m_pointLightIntensity                   // 포인트 라이트 강도
+	);
 	if (!result) { return false; }
 
 	// 5. 씬 종료
