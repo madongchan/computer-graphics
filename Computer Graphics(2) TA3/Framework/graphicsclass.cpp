@@ -8,11 +8,11 @@ GraphicsClass::GraphicsClass()
 {
 	m_D3D = 0;
 	m_Camera = 0;
-	m_Model1 = 0;
-	m_Model2 = 0;
-	m_Model3 = 0;
-	m_GroundModel = 0;
 	m_LightShader = 0;
+	m_TitleScreen = 0;
+	m_TutorialScreen = 0;
+	m_Text = 0;
+	m_TextureShader = 0;
 	m_Skybox = 0;
 	m_SkyboxShader = 0;
 	m_BumpMapShader = 0;
@@ -108,42 +108,31 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	m_Camera->SetPosition(0.0f, 0.0f, -7.0f); // 바닥(-1.0f)보다 높은 곳에서 시작
 	m_Camera->SetGroundLevel(0.0f); // 바닥 모델의 Y위치와 일치시킴
 	
-	// 모델 1
-	m_Model1 = new ModelClass;
-	if (!m_Model1) { return false; }
-	result = m_Model1->Initialize(m_D3D->GetDevice(),
-		"./data/SM_Prop_Benchpress_01.fbx",         // char* 모델 경로
-		L"./data/PolygonBattleRoyale_Texture_01_A.dds"); // WCHAR* 텍스처 경로
-	if (!result) { return false; }
+	// [벽 & 바닥]
+	m_ModelWall = new ModelClass;
+	m_ModelWall->Initialize(m_D3D->GetDevice(), "./data/cube.fbx", L"./data/WallTexture.dds"); // 벽용 큐브
 
-	// 모델 2
-	m_Model2 = new ModelClass;
-	if (!m_Model2) { return false; }
-	result = m_Model2->Initialize(m_D3D->GetDevice(),
-		"./data/SM_Prop_EmergencyDrop_Crate_01.fbx",
-		L"./data/PolygonBattleRoyale_Texture_01_A.dds");
-	if (!result) { return false; }
+	m_ModelGround = new ModelClass;
+	m_ModelGround->Initialize(m_D3D->GetDevice(), "./data/Floor.fbx", L"./data/Floor_color.dds");
 
-	// 모델 3
-	m_Model3 = new ModelClass;
-	if (!m_Model3) { return false; }
-	result = m_Model3->Initialize(m_D3D->GetDevice(),
-		"./data/SM_Prop_Propane_01.fbx",
-		L"./data/PolygonBattleRoyale_Texture_01_A.dds");
-	if (!result) { return false; }
+	// [오브젝트]
+	m_ModelCrate = new ModelClass;
+	m_ModelCrate->Initialize(m_D3D->GetDevice(), "./data/Crate.fbx", L"./data/Texture.dds"); // 보급상자
 
-	// 바닥 모델
-	m_GroundModel = new ModelClass;
-	if (!m_GroundModel) { return false; }
-	result = m_GroundModel->Initialize(m_D3D->GetDevice(),
-		"./data/Floor.fbx",
-		L"./data/PolygonBattleRoyale_Texture_01_A.dds");// (이 텍스처는 무시됨)
-	if (!result) { return false; }
-	if(!result)
-	{
-		MessageBox(hwnd, L"Could not initialize the model object.", L"Error", MB_OK);
-		return false;
-	}
+	m_ModelBarricade = new ModelClass;
+	m_ModelBarricade->Initialize(m_D3D->GetDevice(), "./data/Barricade.fbx", L"./data/Texture.dds"); // 바리케이드
+
+	m_ModelObstacle = new ModelClass;
+	m_ModelObstacle->Initialize(m_D3D->GetDevice(), "./data/Tire.fbx", L"./data/Texture.dds"); // 타이어/드럼통
+
+	m_ModelCar = new ModelClass;
+	m_ModelCar->Initialize(m_D3D->GetDevice(), "./data/Car.fbx", L"./data/Texture.dds"); // 차량
+
+	m_ModelTent = new ModelClass;
+	m_ModelTent->Initialize(m_D3D->GetDevice(), "./data/Tent.fbx", L"./data/Texture.dds"); // 텐트
+
+	m_ModelTree = new ModelClass;
+	m_ModelTree->Initialize(m_D3D->GetDevice(), "./data/Tree.fbx", L"./data/Texture.dds"); // 나무
 
 	// 범프맵 셰이더 초기화
 	m_BumpMapShader = new BumpMapShaderClass;
@@ -237,6 +226,19 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		return false;
 	}
 
+	// 텍스처 셰이더 초기화
+	m_TextureShader = new TextureShaderClass;
+	if (!m_TextureShader)
+	{
+		return false;
+	}
+	result = m_TextureShader->Initialize(m_D3D->GetDevice(), hwnd);
+	if (!result)
+	{
+		MessageBox(hwnd, L"Could not initialize the texture shader object.", L"Error", MB_OK);
+		return false;
+	}
+
 	return true;
 }
 void GraphicsClass::Shutdown()
@@ -283,6 +285,14 @@ void GraphicsClass::Shutdown()
 		delete m_SkyboxShader;
 		m_SkyboxShader = 0;
 	}
+	// Release the texture shader object.
+	if (m_TextureShader)
+	{
+		m_TextureShader->Shutdown();
+		delete m_TextureShader;
+		m_TextureShader = 0;
+	}
+	
 	// Release the light object.
 	if (m_Light)
 	{
@@ -365,43 +375,6 @@ bool GraphicsClass::Frame(InputClass* Input, double deltaTime)
 		m_rotation -= (2.0f * (float)XM_PI);
 	}
 	
-	
-	if (Input->IsKeyToggle(DIK_NUMPAD5)) // 5번 키
-	{
-		// (간단한 토글을 위해 bool 플래그가 필요하지만, 우선 IsKeyPressed로 대체)
-		 m_isAmbientOn = !m_isAmbientOn; 
-	}
-	if (Input->IsKeyToggle(DIK_NUMPAD6)) // 6번 키
-	{
-		 m_isDiffuseOn = !m_isDiffuseOn;
-	}
-	if (Input->IsKeyToggle(DIK_NUMPAD7)) // 7번 키
-	{
-		 m_isSpecularOn = !m_isSpecularOn;
-	}
-
-	if (Input->IsKeyPressed(DIK_NUMPAD8)) // '8' - Point Light Intensity 감소
-	{
-		m_pointLightIntensity -= 0.05f; // 감소량 (조절 가능)
-		if (m_pointLightIntensity < 0.0f) // 최소값 0으로 제한
-		{
-			m_pointLightIntensity = 0.0f;
-		}
-	}
-	if (Input->IsKeyPressed(DIK_NUMPAD9)) // '9' - Point Light Intensity 증가
-	{
-		m_pointLightIntensity += 0.05f; // 증가량 (조절 가능)
-		if (m_pointLightIntensity > 5.0f) // 최대값 5로 제한
-		{
-			m_pointLightIntensity = 5.0f;
-		}
-	}
-	// 0번 키로 노말맵 토글
-	if (Input->IsKeyToggle(DIK_NUMPAD0)) // 0번 키
-	{
-		m_isNormalMapOn = !m_isNormalMapOn;
-	}
-
 	// Render the graphics scene.
 	// (기존 코드는 Render 호출이 없었지만, 여기서 해줘야 합니다)
 	result = Render(m_rotation);
@@ -416,50 +389,103 @@ bool GraphicsClass::Frame(InputClass* Input, double deltaTime)
 // 카메라 입력을 처리하는 헬퍼 함수
 void GraphicsClass::HandleInput(InputClass* Input, double deltaTime)
 {
-	long mouseX = 0, mouseY = 0;
-	Input->GetMouseDelta(mouseX, mouseY); // 마우스 상대 이동량(Delta) 가져오기
-
-	// 마우스 이동량에 따라 카메라 Yaw(Y축 회전), Pitch(X축 회전) 조절
-	if (mouseX != 0)
+	if (Input->IsAnyKeyJustPressed())
 	{
-		m_Camera->AdjustYaw(static_cast<float>(mouseX) * m_mouseSensitivity);
-	}
-	if (mouseY != 0)
-	{
-		m_Camera->AdjustPitch(static_cast<float>(mouseY) * m_mouseSensitivity);
-	}
-
-	// DeltaTime을 반영한 카메라 이동 속도 계산
-	float moveSpeed = m_cameraMoveSpeed * static_cast<float>(deltaTime);
-
-	// WASD 키 입력에 따라 카메라 이동
-	if (Input->IsKeyPressed(DIK_W))
-	{
-		m_Camera->MoveForward(moveSpeed); // 전진
-	}
-	if (Input->IsKeyPressed(DIK_S))
-	{
-		m_Camera->MoveForward(-moveSpeed); // 후진
-	}
-	if (Input->IsKeyPressed(DIK_A))
-	{
-		m_Camera->MoveRight(-moveSpeed); // 좌측 이동
-	}
-	if (Input->IsKeyPressed(DIK_D))
-	{
-		m_Camera->MoveRight(moveSpeed); // 우측 이동
+		if (m_SceneState == SceneState::TITLE)
+		{
+			m_SceneState = SceneState::Tutorial;
+		}
+		else if (m_SceneState == SceneState::Tutorial)
+		{
+			m_SceneState = SceneState::MainScene;
+		}
 	}
 
-	// Space 키 입력에 따라 점프
-	if (Input->IsKeyPressed(DIK_SPACE))
+	// 메인 씬에서만 카메라 이동과 애니메이션 처리
+	if (m_SceneState == SceneState::MainScene)
 	{
-		m_Camera->Jump();
+		long mouseX = 0, mouseY = 0;
+		Input->GetMouseDelta(mouseX, mouseY); // 마우스 상대 이동량(Delta) 가져오기
+
+		// 마우스 이동량에 따라 카메라 Yaw(Y축 회전), Pitch(X축 회전) 조절
+		if (mouseX != 0)
+		{
+			m_Camera->AdjustYaw(static_cast<float>(mouseX) * m_mouseSensitivity);
+		}
+		if (mouseY != 0)
+		{
+			m_Camera->AdjustPitch(static_cast<float>(mouseY) * m_mouseSensitivity);
+		}
+
+		// DeltaTime을 반영한 카메라 이동 속도 계산
+		float moveSpeed = m_cameraMoveSpeed * static_cast<float>(deltaTime);
+
+		// WASD 키 입력에 따라 카메라 이동
+		if (Input->IsKeyPressed(DIK_W))
+		{
+			m_Camera->MoveForward(moveSpeed); // 전진
+		}
+		if (Input->IsKeyPressed(DIK_S))
+		{
+			m_Camera->MoveForward(-moveSpeed); // 후진
+		}
+		if (Input->IsKeyPressed(DIK_A))
+		{
+			m_Camera->MoveRight(-moveSpeed); // 좌측 이동
+		}
+		if (Input->IsKeyPressed(DIK_D))
+		{
+			m_Camera->MoveRight(moveSpeed); // 우측 이동
+		}
+
+		// Space 키 입력에 따라 점프
+		if (Input->IsKeyPressed(DIK_SPACE))
+		{
+			m_Camera->Jump();
+		}
+
+		if (Input->IsKeyToggle(DIK_NUMPAD5)) // 5번 키
+		{
+			// (간단한 토글을 위해 bool 플래그가 필요하지만, 우선 IsKeyPressed로 대체)
+			m_isAmbientOn = !m_isAmbientOn;
+		}
+		if (Input->IsKeyToggle(DIK_NUMPAD6)) // 6번 키
+		{
+			m_isDiffuseOn = !m_isDiffuseOn;
+		}
+		if (Input->IsKeyToggle(DIK_NUMPAD7)) // 7번 키
+		{
+			m_isSpecularOn = !m_isSpecularOn;
+		}
+
+		if (Input->IsKeyPressed(DIK_NUMPAD8)) // '8' - Point Light Intensity 감소
+		{
+			m_pointLightIntensity -= 0.05f; // 감소량 (조절 가능)
+			if (m_pointLightIntensity < 0.0f) // 최소값 0으로 제한
+			{
+				m_pointLightIntensity = 0.0f;
+			}
+		}
+		if (Input->IsKeyPressed(DIK_NUMPAD9)) // '9' - Point Light Intensity 증가
+		{
+			m_pointLightIntensity += 0.05f; // 증가량 (조절 가능)
+			if (m_pointLightIntensity > 5.0f) // 최대값 5로 제한
+			{
+				m_pointLightIntensity = 5.0f;
+			}
+		}
+		// 0번 키로 노말맵 토글
+		if (Input->IsKeyToggle(DIK_NUMPAD0)) // 0번 키
+		{
+			m_isNormalMapOn = !m_isNormalMapOn;
+		}
 	}
 }
 
 bool GraphicsClass::Render(float rotation)
 {
-	XMMATRIX worldMatrix, viewMatrix, projectionMatrix;
+	XMMATRIX worldMatrix, viewMatrix, projectionMatrix, orthoMatrix; // orthoMatrix 변수 선언
+	XMMATRIX baseViewMatrix; // UI용 고정 뷰 행렬
 	bool result;
 
 	// 1. 버퍼 클리어
@@ -469,117 +495,169 @@ bool GraphicsClass::Render(float rotation)
 	m_Camera->Render();
 
 	// 3. 뷰/프로젝션 행렬 가져오기
-	m_Camera->GetViewMatrix(viewMatrix);
+	m_Camera->GetViewMatrix(viewMatrix);        // 3D 카메라 뷰
 	m_D3D->GetWorldMatrix(worldMatrix);
-	m_D3D->GetProjectionMatrix(projectionMatrix);
-	m_D3D->GetOrthoMatrix(projectionMatrix);
+	m_D3D->GetProjectionMatrix(projectionMatrix); // 3D 투영
+	m_D3D->GetOrthoMatrix(orthoMatrix);           // [필수] 2D용 직교 투영 행렬 가져오기
+	// [Tip] UI는 카메라가 움직여도 화면에 고정되어야 하므로, 
+	// 움직이는 viewMatrix 대신 '단위 행렬(Identity Matrix)'을 뷰 행렬로 씁니다.
+	baseViewMatrix = XMMatrixIdentity();
 
-	// 4. 스카이박스 그리기 (물체보다 먼저)
-	// -------------------------------------------------
-	// 스카이박스의 월드 행렬을 항상 카메라 위치로 설정
-	worldMatrix = XMMatrixTranslationFromVector(m_Camera->GetPositionXM());
-
-	// 렌더 상태 변경: 컬링 끄기 + 깊이 함수 LESS_EQUAL
-	m_D3D->TurnOnNoCulling();
-	m_D3D->TurnOnDepthLessEqual();
-
-	// 스카이박스 버퍼 설정 및 셰이더 호출
-	m_Skybox->Render(m_D3D->GetDeviceContext());
-	result = m_SkyboxShader->Render(m_D3D->GetDeviceContext(), m_Skybox->GetIndexCount(),
-		worldMatrix, viewMatrix, projectionMatrix,
-		m_Skybox->GetTexture());
-	if (!result) { return false; }
-
-	// 렌더 상태 복구: 컬링 켜기 + 깊이 함수 기본값
-	m_D3D->TurnOnBackCulling();
-	m_D3D->TurnOffDefaultDepth();
-	// -------------------------------------------------
-	// 
-	// m_Light 객체에서 3개의 포인트 라이트 위치/색상 배열을 가져옵니다.
-	XMFLOAT4 pointLightPositions[NUM_POINT_LIGHTS];
-	XMFLOAT4 pointLightColors[NUM_POINT_LIGHTS];
-	for (int i = 0; i < NUM_POINT_LIGHTS; ++i)
+	// 씬 상태에 따라 다른 화면을 렌더링
+	switch (m_SceneState)
 	{
-		pointLightPositions[i] = m_Light->GetPointLightPosition(i);
-		pointLightColors[i] = m_Light->GetPointLightColor(i);
+	case SceneState::TITLE:
+		m_D3D->TurnZBufferOff();
+		result = m_TitleScreen->Render(m_D3D->GetDeviceContext(), 0, 0);
+		if (!result) return false;
+		result = m_TextureShader->Render(m_D3D->GetDeviceContext(), m_TitleScreen->GetIndexCount(),
+			worldMatrix, baseViewMatrix, orthoMatrix,
+			m_TitleScreen->GetTexture());
+		if (!result) return false;
+		m_D3D->TurnZBufferOn();
+		break;
+
+	case SceneState::Tutorial:
+		m_D3D->TurnZBufferOff();
+		result = m_TutorialScreen->Render(m_D3D->GetDeviceContext(), 0, 0);
+		if (!result) return false;
+		result = m_TextureShader->Render(m_D3D->GetDeviceContext(), m_TutorialScreen->GetIndexCount(),
+			worldMatrix, baseViewMatrix, orthoMatrix,
+			m_TutorialScreen->GetTexture());
+		if (!result) return false;
+		m_D3D->TurnZBufferOn();
+		break;
+
+	case SceneState::MainScene:
+		// 4. 스카이박스 그리기 (물체보다 먼저)
+		// -------------------------------------------------
+		// 스카이박스의 월드 행렬을 항상 카메라 위치로 설정
+		worldMatrix = XMMatrixTranslationFromVector(m_Camera->GetPositionXM());
+
+		// 렌더 상태 변경: 컬링 끄기 + 깊이 함수 LESS_EQUAL
+		m_D3D->TurnOnNoCulling();
+		m_D3D->TurnOnDepthLessEqual();
+
+		// 스카이박스 버퍼 설정 및 셰이더 호출
+		m_Skybox->Render(m_D3D->GetDeviceContext());
+		result = m_SkyboxShader->Render(m_D3D->GetDeviceContext(), m_Skybox->GetIndexCount(),
+			worldMatrix, viewMatrix, projectionMatrix,
+			m_Skybox->GetTexture());
+		if (!result) { return false; }
+
+		// 렌더 상태 복구: 컬링 켜기 + 깊이 함수 기본값
+		m_D3D->TurnOnBackCulling();
+		m_D3D->TurnOffDefaultDepth();
+		// -------------------------------------------------
+		// 
+		// m_Light 객체에서 3개의 포인트 라이트 위치/색상 배열을 가져옵니다.
+		XMFLOAT4 pointLightPositions[NUM_POINT_LIGHTS];
+		XMFLOAT4 pointLightColors[NUM_POINT_LIGHTS];
+		for (int i = 0; i < NUM_POINT_LIGHTS; ++i)
+		{
+			pointLightPositions[i] = m_Light->GetPointLightPosition(i);
+			pointLightColors[i] = m_Light->GetPointLightColor(i);
+		}
+		// 4. 렌더링 루프 (모델 4개)
+		// 4.1 m_Model1 그리기 (왼쪽)
+		worldMatrix = XMMatrixIdentity(); // 리셋
+		worldMatrix *= XMMatrixScaling(0.01f, 0.01f, 0.01f); // 크기 10%
+		worldMatrix *= XMMatrixRotationY(rotation); // Y축 자전
+		worldMatrix *= XMMatrixTranslation(-3.0f, 0.0f, 0.0f); // 위치 이동
+
+		m_Model1->Render(m_D3D->GetDeviceContext());
+		result = m_LightShader->Render(m_D3D->GetDeviceContext(),
+			m_Model1->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix,
+			m_Model1->GetTexture(), m_Light->GetDirection(), m_Light->GetAmbientColor(),
+			m_Light->GetDiffuseColor(), m_Camera->GetPosition(), m_Light->GetSpecularColor(),
+			m_Light->GetSpecularPower(),
+			m_isAmbientOn, m_isDiffuseOn, m_isSpecularOn,
+			pointLightPositions, pointLightColors, m_pointLightIntensity); // 토글 값 전달
+		if (!result) { return false; }
+
+		// 4.2 m_Model2 그리기 (중앙)
+		worldMatrix = XMMatrixIdentity();
+		worldMatrix *= XMMatrixScaling(0.01f, 0.01f, 0.01f);
+		worldMatrix *= XMMatrixRotationY(rotation);
+		worldMatrix *= XMMatrixTranslation(0.0f, 0.0f, 0.0f);
+
+		m_Model2->Render(m_D3D->GetDeviceContext());
+		result = m_LightShader->Render(m_D3D->GetDeviceContext(),
+			m_Model2->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix,
+			m_Model2->GetTexture(), m_Light->GetDirection(), m_Light->GetAmbientColor(),
+			m_Light->GetDiffuseColor(), m_Camera->GetPosition(), m_Light->GetSpecularColor(),
+			m_Light->GetSpecularPower(),
+			m_isAmbientOn, m_isDiffuseOn, m_isSpecularOn,
+			pointLightPositions, pointLightColors, m_pointLightIntensity);
+		if (!result) { return false; }
+
+		// 4.3 m_Model3 그리기 (오른쪽)
+		worldMatrix = XMMatrixIdentity();
+		worldMatrix *= XMMatrixScaling(0.01f, 0.01f, 0.01f);
+		worldMatrix *= XMMatrixRotationY(rotation);
+		worldMatrix *= XMMatrixTranslation(3.0f, 0.0f, 0.0f);
+
+		m_Model3->Render(m_D3D->GetDeviceContext());
+		result = m_LightShader->Render(m_D3D->GetDeviceContext(),
+			m_Model3->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix,
+			m_Model3->GetTexture(), m_Light->GetDirection(), m_Light->GetAmbientColor(),
+			m_Light->GetDiffuseColor(), m_Camera->GetPosition(), m_Light->GetSpecularColor(),
+			m_Light->GetSpecularPower(),
+			m_isAmbientOn, m_isDiffuseOn, m_isSpecularOn,
+			pointLightPositions, pointLightColors, m_pointLightIntensity);
+		if (!result) { return false; }
+
+		// 4.4 m_GroundModel 그리기 (바닥)
+		worldMatrix = XMMatrixIdentity();
+		worldMatrix *= XMMatrixScaling(0.05f, 0.001f, 0.05f); // 바닥 크기
+		worldMatrix *= XMMatrixTranslation(0.0f, -2.0f, 0.0f); // 바닥 위치
+
+		m_GroundModel->Render(m_D3D->GetDeviceContext());
+		// (LightShader 대신 BumpMapShader 호출)
+		result = m_BumpMapShader->Render(m_D3D->GetDeviceContext(),
+			m_GroundModel->GetIndexCount(),
+			worldMatrix, viewMatrix, projectionMatrix,
+			m_GroundTextures->GetTextureArray(),    // 텍스처 (Color + Normal)
+			m_Light->GetDirection(),                // 조명 방향
+			m_Light->GetAmbientColor(),             // Ambient Color
+			m_Light->GetDiffuseColor(),             // Diffuse Color
+			m_Camera->GetPosition(),                // Camera Pos (Specular용)
+			m_Light->GetSpecularColor(),            // Specular Color
+			m_Light->GetSpecularPower(),            // Specular Power
+
+			m_isAmbientOn,                          // 5번키 상태
+			m_isDiffuseOn,                          // 6번키 상태
+			m_isSpecularOn,                         // 7번키 상태
+			m_isNormalMapOn,                        // 0번키 상태 (BumpMap ON/OFF)
+
+			pointLightPositions,                    // 포인트 라이트 위치 배열
+			pointLightColors,                       // 포인트 라이트 색상 배열
+			m_pointLightIntensity                   // 포인트 라이트 강도
+		);
+		if (!result) { return false; }
+		// 텍스트 출력
+		wchar_t fpsText[64], cpuText[64], polyText[64], resolText[64];
+		swprintf_s(fpsText, 64, L"FPS: %d", m_FPS);
+		swprintf_s(cpuText, 64, L"CPU: %d%%", static_cast<int>(m_CPUUsage));
+
+		//m_PolygonCount = 0;
+		//m_PolygonCount = m_ModelManager->GetModelPolygonCount();
+		//swprintf_s(polyText, 64, L"POLYGON: %d", m_PolygonCount);
+		swprintf_s(resolText, 64, L"RESOLUTION: %d X %d", static_cast<int>(m_ScreenWidth), static_cast<int>(m_ScreenHeight));
+
+		// 텍스트 렌더링
+		m_D3D->TurnZBufferOff();
+		m_D3D->EnableAlphaBlending();
+
+		m_Text->DrawTextLine(fpsText, 10.0f, 0.0f);
+		m_Text->DrawTextLine(cpuText, 10.0f, 11.0f);
+		m_Text->DrawTextLine(polyText, 10.0f, 22.0f);
+		m_Text->DrawTextLine(resolText, 10.0f, 33.0f);
+		// End the text drawing.
+		m_D3D->DisableAlphaBlending();
+		m_D3D->TurnZBufferOn();
+		break;
 	}
-	// 4. 렌더링 루프 (모델 4개)
-	// 4.1 m_Model1 그리기 (왼쪽)
-	worldMatrix = XMMatrixIdentity(); // 리셋
-	worldMatrix *= XMMatrixScaling(0.01f, 0.01f, 0.01f); // 크기 10%
-	worldMatrix *= XMMatrixRotationY(rotation); // Y축 자전
-	worldMatrix *= XMMatrixTranslation(-3.0f, 0.0f, 0.0f); // 위치 이동
-
-	m_Model1->Render(m_D3D->GetDeviceContext());
-	result = m_LightShader->Render(m_D3D->GetDeviceContext(),
-		m_Model1->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix,
-		m_Model1->GetTexture(), m_Light->GetDirection(), m_Light->GetAmbientColor(),
-		m_Light->GetDiffuseColor(), m_Camera->GetPosition(), m_Light->GetSpecularColor(),
-		m_Light->GetSpecularPower(),
-		m_isAmbientOn, m_isDiffuseOn, m_isSpecularOn,
-		pointLightPositions, pointLightColors, m_pointLightIntensity); // 토글 값 전달
-	if (!result) { return false; }
-
-	// 4.2 m_Model2 그리기 (중앙)
-	worldMatrix = XMMatrixIdentity();
-	worldMatrix *= XMMatrixScaling(0.01f, 0.01f, 0.01f);
-	worldMatrix *= XMMatrixRotationY(rotation);
-	worldMatrix *= XMMatrixTranslation(0.0f, 0.0f, 0.0f);
-
-	m_Model2->Render(m_D3D->GetDeviceContext());
-	result = m_LightShader->Render(m_D3D->GetDeviceContext(),
-		m_Model2->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix,
-		m_Model2->GetTexture(), m_Light->GetDirection(), m_Light->GetAmbientColor(),
-		m_Light->GetDiffuseColor(), m_Camera->GetPosition(), m_Light->GetSpecularColor(),
-		m_Light->GetSpecularPower(),
-		m_isAmbientOn, m_isDiffuseOn, m_isSpecularOn,
-		pointLightPositions, pointLightColors, m_pointLightIntensity);
-	if (!result) { return false; }
-
-	// 4.3 m_Model3 그리기 (오른쪽)
-	worldMatrix = XMMatrixIdentity();
-	worldMatrix *= XMMatrixScaling(0.01f, 0.01f, 0.01f);
-	worldMatrix *= XMMatrixRotationY(rotation);
-	worldMatrix *= XMMatrixTranslation(3.0f, 0.0f, 0.0f);
-
-	m_Model3->Render(m_D3D->GetDeviceContext());
-	result = m_LightShader->Render(m_D3D->GetDeviceContext(),
-		m_Model3->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix,
-		m_Model3->GetTexture(), m_Light->GetDirection(), m_Light->GetAmbientColor(),
-		m_Light->GetDiffuseColor(), m_Camera->GetPosition(), m_Light->GetSpecularColor(),
-		m_Light->GetSpecularPower(),
-		m_isAmbientOn, m_isDiffuseOn, m_isSpecularOn,
-		pointLightPositions, pointLightColors, m_pointLightIntensity);
-	if (!result) { return false; }
-
-	// 4.4 m_GroundModel 그리기 (바닥)
-	worldMatrix = XMMatrixIdentity();
-	worldMatrix *= XMMatrixScaling(0.05f, 0.001f, 0.05f); // 바닥 크기
-	worldMatrix *= XMMatrixTranslation(0.0f, -2.0f, 0.0f); // 바닥 위치
-
-	m_GroundModel->Render(m_D3D->GetDeviceContext());
-	// (LightShader 대신 BumpMapShader 호출)
-	result = m_BumpMapShader->Render(m_D3D->GetDeviceContext(),
-		m_GroundModel->GetIndexCount(),
-		worldMatrix, viewMatrix, projectionMatrix,
-		m_GroundTextures->GetTextureArray(),    // 텍스처 (Color + Normal)
-		m_Light->GetDirection(),                // 조명 방향
-		m_Light->GetAmbientColor(),             // Ambient Color
-		m_Light->GetDiffuseColor(),             // Diffuse Color
-		m_Camera->GetPosition(),                // Camera Pos (Specular용)
-		m_Light->GetSpecularColor(),            // Specular Color
-		m_Light->GetSpecularPower(),            // Specular Power
-
-		m_isAmbientOn,                          // 5번키 상태
-		m_isDiffuseOn,                          // 6번키 상태
-		m_isSpecularOn,                         // 7번키 상태
-		m_isNormalMapOn,                        // 0번키 상태 (BumpMap ON/OFF)
-
-		pointLightPositions,                    // 포인트 라이트 위치 배열
-		pointLightColors,                       // 포인트 라이트 색상 배열
-		m_pointLightIntensity                   // 포인트 라이트 강도
-	);
-	if (!result) { return false; }
 
 	// 5. 씬 종료
 	m_D3D->EndScene();

@@ -58,6 +58,12 @@ public:
 
 	void GetVideoCardInfo(char*, int&);
 
+	void TurnZBufferOn();
+	void TurnZBufferOff();
+
+	void EnableAlphaBlending();
+	void DisableAlphaBlending();
+
 private:
 	bool m_vsync_enabled;
 	int m_videoCardMemory;
@@ -66,10 +72,14 @@ private:
 	ID3D11Device* m_device;
 	ID3D11DeviceContext* m_deviceContext;
 	ID3D11RenderTargetView* m_renderTargetView;
-	ID3D11Texture2D* m_depthStencilBuffer;
-	ID3D11DepthStencilState* m_depthStencilState;
-	ID3D11DepthStencilView* m_depthStencilView;
-	ID3D11RasterizerState* m_rasterState;
+	ID3D11Texture2D* m_depthStencilBuffer; // 깊이버퍼
+	ID3D11DepthStencilState* m_depthDisabledStencilState; // 깊이버퍼 비활성화용 렌더 상태 객체
+	ID3D11DepthStencilState* m_depthStencilState; // 깊이버퍼 활성화용 렌더 상태 객체
+	ID3D11DepthStencilView* m_depthStencilView; // 깊이버퍼 뷰
+	ID3D11RasterizerState* m_rasterState; // 래스터라이저 상태 객체
+	// 알파 블렌딩용 렌더 상태 객체들
+	ID3D11BlendState* m_alphaEnableBlendingState;
+	ID3D11BlendState* m_alphaDisableBlendingState;
 	// 스카이박스용 렌더 상태 객체들
 	ID3D11RasterizerState* m_rasterStateNoCulling;
 	ID3D11DepthStencilState* m_depthStateLessEqual;

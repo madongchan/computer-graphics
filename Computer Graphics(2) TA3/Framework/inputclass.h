@@ -45,6 +45,8 @@ public:
 	void GetMouseDelta(long& mouseX, long& mouseY);
 	bool IsKeyToggle(unsigned int key);
 
+	bool IsAnyKeyJustPressed();
+
 private:
 	bool ReadKeyboard();
 	bool ReadMouse();

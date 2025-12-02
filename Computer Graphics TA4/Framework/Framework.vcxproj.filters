@@ -109,6 +109,7 @@
     <ClInclude Include="ModelManager.h">
       <Filter>소스 파일</Filter>
     </ClInclude>
+    <ClInclude Include="BaseShaderClass.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="data\Title.dds">

@@ -24,7 +24,7 @@ GraphicsClass::GraphicsClass()
     m_PolygonCount = 0;
     m_ScreenWidth = 0.0f;
     m_ScreenHeight = 0.0f;
-    m_SceneState = SceneState::MainScene;
+    m_SceneState = SceneState::TITLE;
     m_AnimationTime = 0.0f;
     m_LastFrameTime = 0.0f;
 }

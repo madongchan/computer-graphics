@@ -274,3 +274,16 @@ bool InputClass::IsKeyToggle(unsigned int key)
 
 	return false;
 }
+
+bool InputClass::IsAnyKeyJustPressed()
+{
+	// 모든 키에 대해 반복하면서 토글 상태 확인
+	for (unsigned int key = 0; key < 256; ++key)
+	{
+		if (IsKeyToggle(key))
+		{
+			return true;
+		}
+	}
+	return false;
+}

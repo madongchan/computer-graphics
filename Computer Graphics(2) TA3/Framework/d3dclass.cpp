@@ -202,9 +202,18 @@ bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hw
 	// Set the feature level to DirectX 11.
 	featureLevel = D3D_FEATURE_LEVEL_11_0;
 
+	// [수정됨] Direct2D(TextClass) 사용을 위해 BGRA 지원 플래그 추가
+	UINT creationFlags = D3D11_CREATE_DEVICE_BGRA_SUPPORT;
+
+#ifdef _DEBUG
+	// 디버그 모드일 때 디버그 레이어 활성화 (선택 사항이지만 추천)
+	creationFlags |= D3D11_CREATE_DEVICE_DEBUG;
+#endif
+
 	// Create the swap chain, Direct3D device, and Direct3D device context.
-	result = D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, 0, &featureLevel, 1, 
-										   D3D11_SDK_VERSION, &swapChainDesc, &m_swapChain, &m_device, NULL, &m_deviceContext);
+	// 4번째 인자에 'creationFlags'를 넣습니다.
+	result = D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, creationFlags, &featureLevel, 1,
+		D3D11_SDK_VERSION, &swapChainDesc, &m_swapChain, &m_device, NULL, &m_deviceContext);
 	if(FAILED(result))
 	{
 		return false;
@@ -282,6 +291,37 @@ bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hw
 		return false;
 	}
 
+	// -----------------------------------------------------------------
+	// [추가] 2D 렌더링을 위한 심도(Z-Buffer) 비활성화 상태 설정
+	// -----------------------------------------------------------------
+	D3D11_DEPTH_STENCIL_DESC depthDisabledStencilDesc;
+	ZeroMemory(&depthDisabledStencilDesc, sizeof(depthDisabledStencilDesc));
+
+	// 핵심: 깊이 검사를 끈다 (False)
+	depthDisabledStencilDesc.DepthEnable = false;
+	depthDisabledStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+	depthDisabledStencilDesc.DepthFunc = D3D11_COMPARISON_LESS;
+
+	// 스텐실 설정 (기본값과 동일하게 유지)
+	depthDisabledStencilDesc.StencilEnable = true;
+	depthDisabledStencilDesc.StencilReadMask = 0xFF;
+	depthDisabledStencilDesc.StencilWriteMask = 0xFF;
+	depthDisabledStencilDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+	depthDisabledStencilDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_INCR;
+	depthDisabledStencilDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+	depthDisabledStencilDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+	depthDisabledStencilDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+	depthDisabledStencilDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_DECR;
+	depthDisabledStencilDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+	depthDisabledStencilDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+
+	// 상태 객체 생성
+	result = m_device->CreateDepthStencilState(&depthDisabledStencilDesc, &m_depthDisabledStencilState);
+	if (FAILED(result))
+	{
+		return false;
+	}
+
 	// ★ 스카이박스용 "Less Equal" 깊이 상태 생성
 	//
 	D3D11_DEPTH_STENCIL_DESC depthStencilDescLessEqual;
@@ -341,6 +381,37 @@ bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hw
 	// Now set the rasterizer state.
 	m_deviceContext->RSSetState(m_rasterState);
 	
+	// [추가] 1. 알파 블렌딩을 켜는 상태(Enable) 설정
+	D3D11_BLEND_DESC blendStateDescription;
+	ZeroMemory(&blendStateDescription, sizeof(D3D11_BLEND_DESC));
+
+	blendStateDescription.RenderTarget[0].BlendEnable = TRUE;
+	// 목적지(이미 그려진 픽셀)와 소스(새로 그릴 픽셀)의 색상을 어떻게 섞을지 결정
+	blendStateDescription.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+	blendStateDescription.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+	blendStateDescription.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+	blendStateDescription.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+	blendStateDescription.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+	blendStateDescription.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+	blendStateDescription.RenderTarget[0].RenderTargetWriteMask = 0x0f;
+
+	// 블렌드 상태 생성
+	result = m_device->CreateBlendState(&blendStateDescription, &m_alphaEnableBlendingState);
+	if (FAILED(result))
+	{
+		return false;
+	}
+
+	// [추가] 2. 알파 블렌딩을 끄는 상태(Disable) 설정
+	blendStateDescription.RenderTarget[0].BlendEnable = FALSE; // 끄기
+
+	// 블렌드 상태 생성
+	result = m_device->CreateBlendState(&blendStateDescription, &m_alphaDisableBlendingState);
+	if (FAILED(result))
+	{
+		return false;
+	}
+
 	// ★ 스카이박스용 "No Culling" 래스터라이저 상태 생성
 	//
 	D3D11_RASTERIZER_DESC rasterDescNoCulling;
@@ -398,7 +469,18 @@ void D3DClass::Shutdown()
 		m_rasterState->Release();
 		m_rasterState = 0;
 	}
+	// [추가] 블렌드 상태 해제
+	if (m_alphaEnableBlendingState)
+	{
+		m_alphaEnableBlendingState->Release();
+		m_alphaEnableBlendingState = 0;
+	}
 
+	if (m_alphaDisableBlendingState)
+	{
+		m_alphaDisableBlendingState->Release();
+		m_alphaDisableBlendingState = 0;
+	}
 	if(m_depthStencilView)
 	{
 		m_depthStencilView->Release();
@@ -409,6 +491,11 @@ void D3DClass::Shutdown()
 	{
 		m_depthStencilState->Release();
 		m_depthStencilState = 0;
+	}
+	if (m_depthDisabledStencilState)
+	{
+		m_depthDisabledStencilState->Release();
+		m_depthDisabledStencilState = 0;
 	}
 
 	if(m_depthStencilBuffer)
@@ -533,6 +620,28 @@ void D3DClass::GetVideoCardInfo(char* cardName, int& memory)
 	strcpy_s(cardName, 128, m_videoCardDescription);
 	memory = m_videoCardMemory;
 	return;
+}
+
+void D3DClass::TurnZBufferOn()
+{
+	m_deviceContext->OMSetDepthStencilState(m_depthStencilState, 1);
+}
+
+void D3DClass::TurnZBufferOff()
+{
+	m_deviceContext->OMSetDepthStencilState(m_depthDisabledStencilState, 1);
+}
+
+void D3DClass::EnableAlphaBlending()
+{
+	float blendFactor[4] = { 0.f, 0.f, 0.f, 0.f };
+	m_deviceContext->OMSetBlendState(m_alphaEnableBlendingState, blendFactor, 0xffffffff);
+}
+
+void D3DClass::DisableAlphaBlending()
+{
+	float blendFactor[4] = { 0.f, 0.f, 0.f, 0.f };
+	m_deviceContext->OMSetBlendState(m_alphaDisableBlendingState, blendFactor, 0xffffffff);
 }
 
 // ★ 렌더 상태 변경 함수 4개 구현

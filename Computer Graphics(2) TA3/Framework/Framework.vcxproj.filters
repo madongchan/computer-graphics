@@ -62,6 +62,15 @@
     <ClCompile Include="TextureArrayClass.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="textureshaderclass.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="bitmapclass.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="textclass.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="d3dclass.h">
@@ -115,6 +124,15 @@
     <ClInclude Include="TextureArrayClass.h">
       <Filter>소스 파일</Filter>
     </ClInclude>
+    <ClInclude Include="textureshaderclass.h">
+      <Filter>소스 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="bitmapclass.h">
+      <Filter>소스 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="textclass.h">
+      <Filter>소스 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="data\phongLightShader.hlsl">
@@ -144,6 +162,9 @@
     <None Include="data\Floor.fbx">
       <Filter>리소스 파일</Filter>
     </None>
+    <None Include="data\textureShader.hlsl">
+      <Filter>리소스 파일</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="data\Road.dds">
@@ -159,6 +180,12 @@
       <Filter>리소스 파일</Filter>
     </Image>
     <Image Include="data\Floor_normal.dds">
+      <Filter>리소스 파일</Filter>
+    </Image>
+    <Image Include="data\Title.dds">
+      <Filter>리소스 파일</Filter>
+    </Image>
+    <Image Include="data\Tutorial.dds">
       <Filter>리소스 파일</Filter>
     </Image>
   </ItemGroup>

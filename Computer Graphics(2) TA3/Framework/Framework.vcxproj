@@ -156,6 +156,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="bitmapclass.cpp" />
     <ClCompile Include="BumpMapShaderClass.cpp" />
     <ClCompile Include="cameraclass.cpp" />
     <ClCompile Include="d3dclass.cpp" />
@@ -170,12 +171,15 @@
     <ClCompile Include="SkyboxShaderClass.cpp" />
     <ClCompile Include="soundclass.cpp" />
     <ClCompile Include="systemclass.cpp" />
+    <ClCompile Include="textclass.cpp" />
     <ClCompile Include="TextureArrayClass.cpp" />
     <ClCompile Include="textureclass.cpp" />
+    <ClCompile Include="textureshaderclass.cpp" />
     <ClCompile Include="timerclass.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AlignedAllocationPolicy.h" />
+    <ClInclude Include="bitmapclass.h" />
     <ClInclude Include="BumpMapShaderClass.h" />
     <ClInclude Include="cameraclass.h" />
     <ClInclude Include="d3dclass.h" />
@@ -189,8 +193,10 @@
     <ClInclude Include="SkyboxShaderClass.h" />
     <ClInclude Include="soundclass.h" />
     <ClInclude Include="systemclass.h" />
+    <ClInclude Include="textclass.h" />
     <ClInclude Include="TextureArrayClass.h" />
     <ClInclude Include="textureclass.h" />
+    <ClInclude Include="textureshaderclass.h" />
     <ClInclude Include="timerclass.h" />
   </ItemGroup>
   <ItemGroup>
@@ -212,6 +218,8 @@
     <Image Include="data\PolygonBattleRoyale_Texture_01_A.dds" />
     <Image Include="data\Road.dds" />
     <Image Include="data\skybox.dds" />
+    <Image Include="data\Title.dds" />
+    <Image Include="data\Tutorial.dds" />
   </ItemGroup>
   <ItemGroup>
     <None Include="data\skybox.hlsl">
@@ -222,6 +230,11 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="data\bumpmapShader.hlsl">
+      <FileType>Document</FileType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="data\textureShader.hlsl">
       <FileType>Document</FileType>
     </None>
   </ItemGroup>

@@ -15,6 +15,7 @@
 #include "lightclass.h"      
 #include "inputclass.h"
 #include "textclass.h"
+#include "textureshaderclass.h"
 #include "fpsclass.h"
 #include "cpuclass.h"
 #include "bitmapclass.h"
@@ -24,6 +25,16 @@
 #include "bumpmapshaderclass.h"
 #include "texturearrayclass.h"
 
+#include <vector> // 필수
+
+// 1. 오브젝트 구조체 정의
+struct GameObject
+{
+	ModelClass* model;  // 모델 원본 포인터
+	XMFLOAT3 position;  // 위치
+	XMFLOAT3 rotation;  // 회전
+	XMFLOAT3 scale;     // 크기
+};
 /////////////
 // GLOBALS //
 /////////////
@@ -62,17 +73,30 @@ private:
 	SceneState m_SceneState;
 	D3DClass* m_D3D;
 	CameraClass* m_Camera;
-	ModelClass* m_Model1;
-	ModelClass* m_Model2;
-	ModelClass* m_Model3;
-	ModelClass* m_GroundModel;
+
+	// 2. 배치된 물체 리스트 (여기에 수십 개의 물체가 담깁니다)
+	std::vector<GameObject> m_GameObjects;
+
+	// 3. 역할별 모델 리소스 변수 (여기에 FBX를 로딩합니다)
+	ModelClass* m_ModelWall;       // 벽 (cube.fbx 추천)
+	ModelClass* m_ModelGround;     // 바닥 (Floor.fbx)
+
+	ModelClass* m_ModelCrate;      // 보급상자 (중앙 목표)
+	ModelClass* m_ModelBarricade;  // 방어벽/바리케이드
+	ModelClass* m_ModelObstacle;   // 작은 장애물 (타이어, 드럼통 등)
+	ModelClass* m_ModelCar;        // 차량 (엄폐물)
+	ModelClass* m_ModelTent;       // 텐트 (스폰 지점)
+	ModelClass* m_ModelTree;       // 나무 (외곽 장식)
 	
 	LightShaderClass* m_LightShader;
 	LightClass* m_Light;
 
+	TextureShaderClass* m_TextureShader;
+
 	BitmapClass* m_TitleScreen;
 	BitmapClass* m_TutorialScreen;
 
+	// 텍스트 렌더링용 클래스 추가 ★
 	TextClass* m_Text;
 
 	SkyboxClass* m_Skybox;
