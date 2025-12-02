@@ -14,6 +14,10 @@
 #include "lightshaderclass.h" 
 #include "lightclass.h"      
 #include "inputclass.h"
+#include "textclass.h"
+#include "fpsclass.h"
+#include "cpuclass.h"
+#include "bitmapclass.h"
 
 #include "skyboxclass.h"
 #include "skyboxshaderclass.h"
@@ -28,6 +32,12 @@ const bool VSYNC_ENABLED = true;
 const float SCREEN_DEPTH = 1000.0f;
 const float SCREEN_NEAR = 0.1f;
 
+// Scene state enum
+enum class SceneState {
+	TITLE,
+	Tutorial,
+	MainScene
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 // Class name: GraphicsClass
@@ -49,6 +59,7 @@ private:
 	bool Render(float);
 
 private:
+	SceneState m_SceneState;
 	D3DClass* m_D3D;
 	CameraClass* m_Camera;
 	ModelClass* m_Model1;
@@ -58,6 +69,11 @@ private:
 	
 	LightShaderClass* m_LightShader;
 	LightClass* m_Light;
+
+	BitmapClass* m_TitleScreen;
+	BitmapClass* m_TutorialScreen;
+
+	TextClass* m_Text;
 
 	SkyboxClass* m_Skybox;
 	SkyboxShaderClass* m_SkyboxShader;
@@ -81,6 +97,12 @@ private:
 	const float m_mouseSensitivity = 0.005f;
 
 	bool m_isCameraControlMode = true;
+
+	int m_FPS;
+	float m_CPUUsage;
+	long m_PolygonCount;
+	float m_ScreenWidth;
+	float m_ScreenHeight;
 };
 
 #endif

@@ -42,12 +42,14 @@ public:
 
 	ID3D11Device* GetDevice();
 	ID3D11DeviceContext* GetDeviceContext();
+	IDXGISwapChain* GetSwapChain() { return m_swapChain; }
+	IDXGISwapChain* GetSwapChain() const { return m_swapChain; }
 
 	// 스카이박스용 렌더 상태 제어 함수
-	void TurnOnNoCulling();
-	void TurnOnBackCulling();
-	void TurnOnDepthLessEqual();
-	void TurnOffDefaultDepth();
+	void TurnOnNoCulling(); // 컬링 끄기 : 앞면/뒷면 모두 렌더링
+	void TurnOnBackCulling(); // 컬링 켜기 : 뒷면 렌더링 안함
+	void TurnOnDepthLessEqual(); // 깊이 함수 LESS_EQUAL 설정
+	void TurnOffDefaultDepth(); // 깊이 함수 기본값 설정
 	// ---
 
 	void GetProjectionMatrix(XMMATRIX&);

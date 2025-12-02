@@ -24,23 +24,26 @@ GraphicsClass::GraphicsClass()
 	m_isSpecularOn = true;
 	m_isNormalMapOn = true;
 	m_pointLightIntensity = 1.0f; // 기본 강도 1.0
+
+	m_FPS = 0;
+	m_CPUUsage = 0.0f;
+	m_PolygonCount = 0;
+	m_ScreenWidth = 0.0f;
+	m_ScreenHeight = 0.0f;
+	m_SceneState = SceneState::TITLE;
 }
-
-
 GraphicsClass::GraphicsClass(const GraphicsClass& other)
 {
 }
-
-
 GraphicsClass::~GraphicsClass()
 {
 }
 
-
 bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 {
 	bool result;
-
+	m_ScreenWidth = (float)screenWidth;
+	m_ScreenHeight = (float)screenHeight;
 
 	// Create the Direct3D object.
 	m_D3D = new D3DClass;
@@ -61,6 +64,43 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	m_Camera = new CameraClass;
 	if(!m_Camera)
 	{
+		return false;
+	}
+	// 타이틀
+	m_TitleScreen = new BitmapClass;
+	if (!m_TitleScreen)
+	{
+		return false;
+	}
+	result = m_TitleScreen->Initialize(m_D3D->GetDevice(), screenWidth, screenHeight, L"./data/Title.dds", screenWidth, screenHeight);
+	if (!result)
+	{
+		MessageBox(hwnd, L"Could not initialize the TitleScreen bitmap object.", L"Error", MB_OK);
+		return false;
+	}
+	// 튜토리얼
+	m_TutorialScreen = new BitmapClass;
+	if (!m_TutorialScreen)
+	{
+		return false;
+	}
+	result = m_TutorialScreen->Initialize(m_D3D->GetDevice(), screenWidth, screenHeight, L"./data/Tutorial.dds", screenWidth, screenHeight);
+	if (!result)
+	{
+		MessageBox(hwnd, L"Could not initialize the m_TurorialScreen bitmap object.", L"Error", MB_OK);
+		return false;
+	}
+
+	m_Text = new TextClass;
+	if (!m_Text) return false;
+
+	result = m_Text->Initialize(
+		m_D3D->GetDevice(),
+		m_D3D->GetSwapChain()
+	);
+	if (!result)
+	{
+		MessageBox(hwnd, L"Could not initialize TextClass.", L"Error", MB_OK);
 		return false;
 	}
 
@@ -201,6 +241,24 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 }
 void GraphicsClass::Shutdown()
 {
+	if (m_Text)
+	{
+		m_Text->Shutdown();
+		delete m_Text;
+		m_Text = nullptr;
+	}
+	if (m_TitleScreen)
+	{
+		m_TitleScreen->Shutdown();
+		delete m_TitleScreen;
+		m_TitleScreen = 0;
+	}
+	if (m_TutorialScreen)
+	{
+		m_TutorialScreen->Shutdown();
+		delete m_TutorialScreen;
+		m_TutorialScreen = 0;
+	}
 	if (m_BumpMapShader)
 	{
 		m_BumpMapShader->Shutdown();
@@ -412,7 +470,9 @@ bool GraphicsClass::Render(float rotation)
 
 	// 3. 뷰/프로젝션 행렬 가져오기
 	m_Camera->GetViewMatrix(viewMatrix);
+	m_D3D->GetWorldMatrix(worldMatrix);
 	m_D3D->GetProjectionMatrix(projectionMatrix);
+	m_D3D->GetOrthoMatrix(projectionMatrix);
 
 	// 4. 스카이박스 그리기 (물체보다 먼저)
 	// -------------------------------------------------
