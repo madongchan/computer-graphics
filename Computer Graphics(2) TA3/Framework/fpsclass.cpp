@@ -20,19 +20,18 @@ void FPSClass::Initialize(TimerClass* timer)
     m_timeElapsed = 0.0;
 }
 
-void FPSClass::Frame()
+void FPSClass::Frame(double deltaTime)
 {
-    // 델타 타임을 가져와 누적
-    double delta = m_timer->GetDeltaTime();
-    m_timeElapsed += delta;
     m_frameCount++;
 
-    // 1초가 넘으면 FPS 계산
+    // m_timeElapsed += m_timer->GetDeltaTime(); // <-- 이 줄을 삭제하거나 주석 처리!
+    m_timeElapsed += deltaTime;                  // <-- 이렇게 변경!
+
     if (m_timeElapsed >= 1.0)
     {
         m_fps = m_frameCount;
         m_frameCount = 0;
-        m_timeElapsed = 0.0;
+        m_timeElapsed -= 1.0;
     }
 }
 

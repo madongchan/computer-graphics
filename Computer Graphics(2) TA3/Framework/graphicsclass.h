@@ -62,12 +62,12 @@ public:
 
 	bool Initialize(int, int, HWND);
 	void Shutdown();
-	bool Frame(InputClass*, double deltaTime);
+	bool Frame(InputClass*, double deltaTime, int fps, float cpuUsage);
 
 private:
 	// HandleInput 헬퍼 함수 추가
 	void HandleInput(InputClass* Input, double deltaTime);
-	bool Render(float);
+	bool Render();
 
 private:
 	SceneState m_SceneState;

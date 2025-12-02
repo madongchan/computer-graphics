@@ -12,7 +12,7 @@ public:
     void Initialize(TimerClass* timer);
 
     // 한 프레임이 끝날 때마다 호출, 내부에서 1초마다 FPS 계산
-    void Frame();
+    void Frame(double deltaTime);
 
     // 현재 계산된 FPS 값 반환
     int GetFPS() const;

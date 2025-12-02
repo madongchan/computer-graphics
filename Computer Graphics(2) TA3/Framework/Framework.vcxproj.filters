@@ -71,6 +71,12 @@
     <ClCompile Include="textclass.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="cpuclass.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="fpsclass.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="d3dclass.h">
@@ -133,21 +139,15 @@
     <ClInclude Include="textclass.h">
       <Filter>소스 파일</Filter>
     </ClInclude>
+    <ClInclude Include="cpuclass.h">
+      <Filter>소스 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="fpsclass.h">
+      <Filter>소스 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="data\phongLightShader.hlsl">
-      <Filter>리소스 파일</Filter>
-    </None>
-    <None Include="data\Road.fbx">
-      <Filter>리소스 파일</Filter>
-    </None>
-    <None Include="data\SM_Prop_Benchpress_01.fbx">
-      <Filter>리소스 파일</Filter>
-    </None>
-    <None Include="data\SM_Prop_EmergencyDrop_Crate_01.fbx">
-      <Filter>리소스 파일</Filter>
-    </None>
-    <None Include="data\SM_Prop_Propane_01.fbx">
       <Filter>리소스 파일</Filter>
     </None>
     <None Include="data\cube.fbx">
@@ -165,12 +165,33 @@
     <None Include="data\textureShader.hlsl">
       <Filter>리소스 파일</Filter>
     </None>
+    <None Include="data\Barricade.fbx">
+      <Filter>리소스 파일</Filter>
+    </None>
+    <None Include="data\Car.fbx">
+      <Filter>리소스 파일</Filter>
+    </None>
+    <None Include="data\Crate.fbx">
+      <Filter>리소스 파일</Filter>
+    </None>
+    <None Include="data\Tent.fbx">
+      <Filter>리소스 파일</Filter>
+    </None>
+    <None Include="data\Tire.fbx">
+      <Filter>리소스 파일</Filter>
+    </None>
+    <None Include="data\Tree.fbx">
+      <Filter>리소스 파일</Filter>
+    </None>
+    <None Include="data\Wall.fbx">
+      <Filter>리소스 파일</Filter>
+    </None>
+    <None Include="data\Floor2.fbx">
+      <Filter>리소스 파일</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="data\Road.dds">
-      <Filter>리소스 파일</Filter>
-    </Image>
-    <Image Include="data\PolygonBattleRoyale_Texture_01_A.dds">
+    <Image Include="data\Texture.dds">
       <Filter>리소스 파일</Filter>
     </Image>
     <Image Include="data\skybox.dds">
@@ -186,6 +207,12 @@
       <Filter>리소스 파일</Filter>
     </Image>
     <Image Include="data\Tutorial.dds">
+      <Filter>리소스 파일</Filter>
+    </Image>
+    <Image Include="data\Vehicles_Destroy.dds">
+      <Filter>리소스 파일</Filter>
+    </Image>
+    <Image Include="data\Floor_color2.dds">
       <Filter>리소스 파일</Filter>
     </Image>
   </ItemGroup>

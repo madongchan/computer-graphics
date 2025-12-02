@@ -10,6 +10,8 @@ SystemClass::SystemClass()
 	m_Graphics = 0;
 	m_Sound = 0;
 	m_Timer = 0;
+	m_FPS = 0;
+	m_CPU = 0;
 
 	m_screenWidth = 0;
 	m_screenHeight = 0;
@@ -86,6 +88,14 @@ bool SystemClass::Initialize()
 		return false;
 	}
 	m_Timer->Initialize();
+
+	m_FPS = new FPSClass;
+	if (!m_FPS) return false;
+	m_FPS->Initialize(m_Timer);
+
+	m_CPU = new CPUClass;
+	if (!m_CPU) return false;
+	m_CPU->Initialize();
 
 	m_isCameraControlMode = true;
 	return true;
@@ -172,6 +182,9 @@ bool SystemClass::Frame(double deltaTime)
 {
 	bool result;
 
+	m_FPS->Frame(deltaTime);
+	m_CPU->Frame();
+
 	// 1. (입력) DirectInput으로 키보드/마우스 상태 읽기
 	result = m_Input->Frame();
 	if (!result)
@@ -202,7 +215,7 @@ bool SystemClass::Frame(double deltaTime)
 	}
 
 	// 3. (로직/렌더링) Graphics 객체 프레임 처리 (deltaTime 전달)
-	result = m_Graphics->Frame(m_Input, deltaTime);
+	result = m_Graphics->Frame(m_Input, deltaTime, m_FPS->GetFPS(), m_CPU->GetCPUPercent());
 	if (!result)
 	{
 		return false;

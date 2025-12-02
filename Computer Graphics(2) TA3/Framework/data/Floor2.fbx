@@ -7,12 +7,12 @@ FBXHeaderExtension:  {
 	CreationTimeStamp:  {
 		Version: 1000
 		Year: 2025
-		Month: 10
-		Day: 19
-		Hour: 16
-		Minute: 3
-		Second: 10
-		Millisecond: 227
+		Month: 11
+		Day: 5
+		Hour: 7
+		Minute: 1
+		Second: 15
+		Millisecond: 491
 	}
 	Creator: "FBX SDK/FBX Plugins version 2020.3.4"
 	OtherFlags:  {
@@ -76,7 +76,7 @@ GlobalSettings:  {
 
 Documents:  {
 	Count: 1
-	Document: 2426746606192, "Scene", "Scene" {
+	Document: 2355801031408, "Scene", "Scene" {
 		Properties70:  {
 			P: "SourceObject", "object", "", ""
 			P: "ActiveAnimStackName", "KString", "", "", ""
@@ -271,12 +271,12 @@ Definitions:  {
 ;------------------------------------------------------------------
 
 Objects:  {
-	Geometry: 2426755810352, "Geometry::Scene", "Mesh" {
-		Vertices: *12 {
-			a: -36.1859917640686,0.999999977648258,-38.687801361084,36.7362201213837,0.999999977648258,-38.687801361084,35.346132516861,0.999999977648258,38.1665229797363,-35.896360874176,0.999999977648258,39.2090797424316
+	Geometry: 2352272737664, "Geometry::Scene", "Mesh" {
+		Vertices: *24 {
+			a: -199.999856948853,0.999999977648258,200.00011920929,-200.00011920929,0.999999977648258,-199.999856948853,199.999856948853,0.999999977648258,-200.00011920929,200.00011920929,0.999999977648258,199.999856948853,-199.999856948853,-5.99999986588955,200.00011920929,200.00011920929,-5.99999986588955,199.999856948853,199.999856948853,-5.99999986588955,-200.00011920929,-200.00011920929,-5.99999986588955,-199.999856948853
 		} 
-		PolygonVertexIndex: *6 {
-			a: 0,2,-2,0,3,-3
+		PolygonVertexIndex: *36 {
+			a: 0,2,-2,0,3,-3,4,6,-6,4,7,-7,3,4,-6,3,0,-5,1,6,-8,1,2,-7,2,5,-7,2,3,-6,0,7,-5,0,1,-8
 		} 
 		GeometryVersion: 124
 		LayerElementNormal: 0 {
@@ -284,11 +284,11 @@ Objects:  {
 			Name: "Normals"
 			MappingInformationType: "ByPolygonVertex"
 			ReferenceInformationType: "Direct"
-			Normals: *18 {
-				a: -0,1,0,-0,1,0,-0,1,0,-0,1,0,-0,1,0,-0,1,0
+			Normals: *108 {
+				a: -0,1,0,-0,1,0,-0,1,0,-0,1,0,-0,1,0,-0,1,0,-0,-1,0,-0,-1,0,-0,-1,0,-0,-1,0,-0,-1,0,-0,-1,0,6.25848770141602e-07,0,1,6.25848770141602e-07,0,1,6.25848770141602e-07,0,1,6.25848770141602e-07,0,1,6.25848770141602e-07,0,1,6.25848770141602e-07,0,1,-6.25848770141602e-07,0,-1,-6.25848770141602e-07,0,-1,-6.25848770141602e-07,0,-1,-6.25848770141602e-07,0,-1,-6.25848770141602e-07,0,-1,-6.25848770141602e-07,0,-1,1,0,-6.38621202142531e-07,1,0,-6.38621202142531e-07,1,0,-6.38621202142531e-07,1,0,-6.38621202142531e-07,1,0,-6.38621202142531e-07,1,0,-6.38621202142531e-07,-1,0,6.38621202142531e-07,-1,0,6.38621202142531e-07,-1,0,6.38621202142531e-07,-1,0,6.38621202142531e-07,-1,0,6.38621202142531e-07,-1,0,6.38621202142531e-07
 			} 
-			NormalsW: *6 {
-				a: 1,1,1,1,1,1
+			NormalsW: *36 {
+				a: 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
 			} 
 		}
 		LayerElementBinormal: 0 {
@@ -296,11 +296,11 @@ Objects:  {
 			Name: "Binormals"
 			MappingInformationType: "ByPolygonVertex"
 			ReferenceInformationType: "Direct"
-			Binormals: *18 {
-				a: 1,-0,-0,1,-0,-0,1,-0,-0,1,-0,-0,1,-0,-0,1,-0,-0
+			Binormals: *108 {
+				a: 0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,-0,-1,0,-0,-1,0,-0,-1,0,-0,-1,0,-0,-1,0,-0,-1,0,1,-0,0,1,-0,0,1,-0,0,1,-0,0,1,-0,0,1,-0,-0,1,0,-0,1,0,-0,1,0,-0,1,0,-0,1,0,-0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0
 			} 
-			BinormalsW: *6 {
-				a: 1,1,1,1,1,1
+			BinormalsW: *36 {
+				a: 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
 			} 
 
 		}
@@ -309,11 +309,11 @@ Objects:  {
 			Name: "Tangents"
 			MappingInformationType: "ByPolygonVertex"
 			ReferenceInformationType: "Direct"
-			Tangents: *18 {
-				a: -0,0,1,-0,0,1,-0,0,1,-0,0,1,-0,0,1,-0,0,1
+			Tangents: *108 {
+				a: 1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,-0,0,-1,-0,0,-1,-0,0,-1,-0,0,-1,-0,0,-1,-0,0,-1,-0,0,-1,-0,0,-1,-0,0,-1,-0,0,-1,-0,0,-1,-0,0,-1
 			} 
-			TangentsW: *6 {
-				a: 1,1,1,1,1,1
+			TangentsW: *36 {
+				a: 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
 			} 
 		}
 		LayerElementUV: 0 {
@@ -321,23 +321,11 @@ Objects:  {
 			Name: "UVSet0"
 			MappingInformationType: "ByPolygonVertex"
 			ReferenceInformationType: "IndexToDirect"
-			UV: *8 {
-				a: 0.485808789730072,0.336782902479172,0.485808819532394,0.518267333507538,0.677079260349274,0.51480770111084,0.679673850536346,0.337503731250763
+			UV: *48 {
+				a: 0,0,0,1,1,1,1,0,0,0,1,0,1,1,0,1,1,0.504999995231628,1,0.495000064373016,0,0.495000064373016,0,0.504999995231628,0,0.504999876022339,0,0.494999974966049,1,0.494999974966049,1,0.504999876022339,0.999999940395355,0.504999995231628,0.999999940395355,0.495000004768372,6.55651092529297e-07,0.495000004768372,6.55651092529297e-07,0.504999995231628,0,0.504999995231628,0,0.495000004768372,0.999999165534973,0.495000004768372,0.999999165534973,0.504999995231628
 			} 
-			UVIndex: *6 {
-				a: 0,2,1,0,3,2
-			} 
-		}
-		LayerElementUV: 1 {
-			Version: 101
-			Name: "UVSet1"
-			MappingInformationType: "ByPolygonVertex"
-			ReferenceInformationType: "IndexToDirect"
-			UV: *8 {
-				a: 0.100428253412247,0.879986345767975,0.100428581237793,0.100428253412247,0.922022581100464,0.115288503468037,0.933167219161987,0.876890122890472
-			} 
-			UVIndex: *6 {
-				a: 0,2,1,0,3,2
+			UVIndex: *36 {
+				a: 0,2,1,0,3,2,4,6,5,4,7,6,8,10,9,8,11,10,12,14,13,12,15,14,16,18,17,16,19,18,20,22,21,20,23,22
 			} 
 		}
 		LayerElementMaterial: 0 {
@@ -372,15 +360,8 @@ Objects:  {
 				TypedIndex: 0
 			}
 		}
-		Layer: 1 {
-			Version: 100
-			LayerElement:  {
-				Type: "LayerElementUV"
-				TypedIndex: 1
-			}
-		}
 	}
-	Model: 2423696102832, "Model::Road_Patches_04", "Mesh" {
+	Model: 2355650278144, "Model::Floor_Piece_1A__10_", "Mesh" {
 		Version: 232
 		Properties70:  {
 			P: "RotationOrder", "enum", "", "",4
@@ -392,58 +373,58 @@ Objects:  {
 		Shading: W
 		Culling: "CullingOff"
 	}
-	Material: 2426752208928, "Material::Road_Patches_01", "" {
+	Material: 2357152208160, "Material::Dungeon_Tile_1A1", "" {
 		Version: 102
 		ShadingModel: "lambert"
 		MultiLayer: 0
 		Properties70:  {
 			P: "AmbientColor", "Color", "", "A",0,0,0
-			P: "DiffuseColor", "Color", "", "A",1,1,1
+			P: "DiffuseColor", "Color", "", "A",0.905660390853882,0.905660390853882,0.905660390853882
 			P: "Emissive", "Vector3D", "Vector", "",0,0,0
 			P: "Ambient", "Vector3D", "Vector", "",0,0,0
-			P: "Diffuse", "Vector3D", "Vector", "",1,1,1
+			P: "Diffuse", "Vector3D", "Vector", "",0.905660390853882,0.905660390853882,0.905660390853882
 			P: "Opacity", "double", "Number", "",1
 		}
 	}
-	Video: 2427898082608, "Video::DiffuseColor_Texture", "Clip" {
+	Video: 2355803188384, "Video::DiffuseColor_Texture", "Clip" {
 		Type: "Clip"
 		Properties70:  {
-			P: "Path", "KString", "XRefUrl", "", "D:\Unity\UI_Stress_Test\Assets\Tokyo_Street\Textures\Street\Road_Patches_01\Road_Patches_01_A.tga"
-			P: "RelPath", "KString", "XRefUrl", "", "..\..\..\..\..\Unity\UI_Stress_Test\Assets\Tokyo_Street\Textures\Street\Road_Patches_01\Road_Patches_01_A.tga"
+			P: "Path", "KString", "XRefUrl", "", "D:\GitHub2\My project\Assets\Ancient Set - Temples\Prefabs\Dungeon Preview\FBX\Materials\Tile Floor 1A2.png"
+			P: "RelPath", "KString", "XRefUrl", "", "..\..\..\..\..\GitHub2\My project\Assets\Ancient Set - Temples\Prefabs\Dungeon Preview\FBX\Materials\Tile Floor 1A2.png"
 		}
 		UseMipMap: 0
-		Filename: "D:\Unity\UI_Stress_Test\Assets\Tokyo_Street\Textures\Street\Road_Patches_01\Road_Patches_01_A.tga"
-		RelativeFilename: "..\..\..\..\..\Unity\UI_Stress_Test\Assets\Tokyo_Street\Textures\Street\Road_Patches_01\Road_Patches_01_A.tga"
+		Filename: "D:\GitHub2\My project\Assets\Ancient Set - Temples\Prefabs\Dungeon Preview\FBX\Materials\Tile Floor 1A2.png"
+		RelativeFilename: "..\..\..\..\..\GitHub2\My project\Assets\Ancient Set - Temples\Prefabs\Dungeon Preview\FBX\Materials\Tile Floor 1A2.png"
 	}
-	Video: 2427898074928, "Video::NormalMap_Texture", "Clip" {
+	Video: 2355803185504, "Video::NormalMap_Texture", "Clip" {
 		Type: "Clip"
 		Properties70:  {
-			P: "Path", "KString", "XRefUrl", "", "D:\Unity\UI_Stress_Test\Assets\Tokyo_Street\Textures\Street\Road_Patches_01\Road_Patches_01_N.tga"
-			P: "RelPath", "KString", "XRefUrl", "", "..\..\..\..\..\Unity\UI_Stress_Test\Assets\Tokyo_Street\Textures\Street\Road_Patches_01\Road_Patches_01_N.tga"
+			P: "Path", "KString", "XRefUrl", "", "D:\GitHub2\My project\Assets\Ancient Set - Temples\Textures\Main Textures\Tile Floor 1A1_Tile Floor 1A1_Normal.png"
+			P: "RelPath", "KString", "XRefUrl", "", "..\..\..\..\..\GitHub2\My project\Assets\Ancient Set - Temples\Textures\Main Textures\Tile Floor 1A1_Tile Floor 1A1_Normal.png"
 		}
 		UseMipMap: 0
-		Filename: "D:\Unity\UI_Stress_Test\Assets\Tokyo_Street\Textures\Street\Road_Patches_01\Road_Patches_01_N.tga"
-		RelativeFilename: "..\..\..\..\..\Unity\UI_Stress_Test\Assets\Tokyo_Street\Textures\Street\Road_Patches_01\Road_Patches_01_N.tga"
+		Filename: "D:\GitHub2\My project\Assets\Ancient Set - Temples\Textures\Main Textures\Tile Floor 1A1_Tile Floor 1A1_Normal.png"
+		RelativeFilename: "..\..\..\..\..\GitHub2\My project\Assets\Ancient Set - Temples\Textures\Main Textures\Tile Floor 1A1_Tile Floor 1A1_Normal.png"
 	}
-	Texture: 2427898075408, "Texture::DiffuseColor_Texture", "" {
+	Texture: 2355803190304, "Texture::DiffuseColor_Texture", "" {
 		Type: "TextureVideoClip"
 		Version: 202
 		TextureName: "Texture::DiffuseColor_Texture"
 		Media: "Video::DiffuseColor_Texture"
-		FileName: "D:\Unity\UI_Stress_Test\Assets\Tokyo_Street\Textures\Street\Road_Patches_01\Road_Patches_01_A.tga"
-		RelativeFilename: "..\..\..\..\..\Unity\UI_Stress_Test\Assets\Tokyo_Street\Textures\Street\Road_Patches_01\Road_Patches_01_A.tga"
+		FileName: "D:\GitHub2\My project\Assets\Ancient Set - Temples\Prefabs\Dungeon Preview\FBX\Materials\Tile Floor 1A2.png"
+		RelativeFilename: "..\..\..\..\..\GitHub2\My project\Assets\Ancient Set - Temples\Prefabs\Dungeon Preview\FBX\Materials\Tile Floor 1A2.png"
 		ModelUVTranslation: 0,0
 		ModelUVScaling: 1,1
 		Texture_Alpha_Source: "None"
 		Cropping: 0,0,0,0
 	}
-	Texture: 2427898077808, "Texture::NormalMap_Texture", "" {
+	Texture: 2355803194144, "Texture::NormalMap_Texture", "" {
 		Type: "TextureVideoClip"
 		Version: 202
 		TextureName: "Texture::NormalMap_Texture"
 		Media: "Video::NormalMap_Texture"
-		FileName: "D:\Unity\UI_Stress_Test\Assets\Tokyo_Street\Textures\Street\Road_Patches_01\Road_Patches_01_N.tga"
-		RelativeFilename: "..\..\..\..\..\Unity\UI_Stress_Test\Assets\Tokyo_Street\Textures\Street\Road_Patches_01\Road_Patches_01_N.tga"
+		FileName: "D:\GitHub2\My project\Assets\Ancient Set - Temples\Textures\Main Textures\Tile Floor 1A1_Tile Floor 1A1_Normal.png"
+		RelativeFilename: "..\..\..\..\..\GitHub2\My project\Assets\Ancient Set - Temples\Textures\Main Textures\Tile Floor 1A1_Tile Floor 1A1_Normal.png"
 		ModelUVTranslation: 0,0
 		ModelUVScaling: 1,1
 		Texture_Alpha_Source: "None"
@@ -456,32 +437,32 @@ Objects:  {
 
 Connections:  {
 	
-	;Model::Road_Patches_04, Model::RootNode
-	C: "OO",2423696102832,0
+	;Model::Floor_Piece_1A__10_, Model::RootNode
+	C: "OO",2355650278144,0
 	
-	;Material::Road_Patches_01, Model::Road_Patches_04
-	C: "OO",2426752208928,2423696102832
+	;Material::Dungeon_Tile_1A1, Model::Floor_Piece_1A__10_
+	C: "OO",2357152208160,2355650278144
 	
-	;Geometry::Scene, Model::Road_Patches_04
-	C: "OO",2426755810352,2423696102832
+	;Geometry::Scene, Model::Floor_Piece_1A__10_
+	C: "OO",2352272737664,2355650278144
 	
-	;Texture::DiffuseColor_Texture, Material::Road_Patches_01
-	C: "OO",2427898075408,2426752208928
+	;Texture::DiffuseColor_Texture, Material::Dungeon_Tile_1A1
+	C: "OO",2355803190304,2357152208160
 	
-	;Texture::NormalMap_Texture, Material::Road_Patches_01
-	C: "OO",2427898077808,2426752208928
+	;Texture::NormalMap_Texture, Material::Dungeon_Tile_1A1
+	C: "OO",2355803194144,2357152208160
 	
-	;Texture::DiffuseColor_Texture, Material::Road_Patches_01
-	C: "OP",2427898075408,2426752208928, "DiffuseColor"
+	;Texture::DiffuseColor_Texture, Material::Dungeon_Tile_1A1
+	C: "OP",2355803190304,2357152208160, "DiffuseColor"
 	
-	;Texture::NormalMap_Texture, Material::Road_Patches_01
-	C: "OP",2427898077808,2426752208928, "NormalMap"
+	;Texture::NormalMap_Texture, Material::Dungeon_Tile_1A1
+	C: "OP",2355803194144,2357152208160, "NormalMap"
 	
 	;Video::DiffuseColor_Texture, Texture::DiffuseColor_Texture
-	C: "OO",2427898082608,2427898075408
+	C: "OO",2355803188384,2355803190304
 	
 	;Video::NormalMap_Texture, Texture::NormalMap_Texture
-	C: "OO",2427898074928,2427898077808
+	C: "OO",2355803185504,2355803194144
 }
 ;Takes section
 ;----------------------------------------------------

@@ -56,6 +56,8 @@ private:
 	GraphicsClass* m_Graphics;
 	SoundClass* m_Sound;
 	TimerClass* m_Timer;
+	FPSClass* m_FPS;
+	CPUClass* m_CPU;
 
 	// 윈도우 크기 및 위치 저장을 위한 멤버 변수
 	int m_screenWidth, m_screenHeight;

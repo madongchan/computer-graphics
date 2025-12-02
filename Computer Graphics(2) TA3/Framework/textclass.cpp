@@ -59,7 +59,7 @@ bool TextClass::Initialize(ID3D11Device* d3dDevice, IDXGISwapChain* swapChain)
         DWRITE_FONT_WEIGHT_NORMAL,
         DWRITE_FONT_STYLE_NORMAL,
         DWRITE_FONT_STRETCH_NORMAL,
-        10.0f,              // font size
+        11.0f,              // font size
         L"",                // locale
         m_textFormat.GetAddressOf()
     );
