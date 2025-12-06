@@ -24,8 +24,7 @@ void FPSClass::Frame(double deltaTime)
 {
     m_frameCount++;
 
-    // m_timeElapsed += m_timer->GetDeltaTime(); // <-- 이 줄을 삭제하거나 주석 처리!
-    m_timeElapsed += deltaTime;                  // <-- 이렇게 변경!
+    m_timeElapsed += deltaTime;
 
     if (m_timeElapsed >= 1.0)
     {

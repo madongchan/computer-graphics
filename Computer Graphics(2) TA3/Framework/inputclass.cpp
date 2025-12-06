@@ -57,9 +57,6 @@ bool InputClass::Initialize(HINSTANCE hinstance, HWND hwnd, int screenWidth, int
 		return false;
 	}
 
-	// Set the cooperative level of the keyboard to not share with other programs.
-	// --- ★ (수정) 키보드 협력 수준 변경 (Exclusive -> NonExclusive) ★ ---
-	// (기존 Exclusive는 Alt+Tab 등 시스템 키를 막을 수 있으므로 NonExclusive로 변경)
 	result = m_keyboard->SetCooperativeLevel(hwnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE);
 	if (FAILED(result))
 	{

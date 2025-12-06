@@ -6,7 +6,6 @@
 
 LightClass::LightClass()
 {
-	// ★ (수정 1) 생성자에서 포인트 라이트 배열 초기화 ★
 	for (int i = 0; i < NUM_POINT_LIGHTS; ++i)
 	{
 		m_pointLightColor[i] = XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f); // 기본값: 검은색
@@ -23,7 +22,6 @@ LightClass::LightClass(const LightClass& other)
 LightClass::~LightClass()
 {
 }
-// --- ★ (수정 2) 포인트 라이트 Set/Get 함수 구현 추가 ★ ---
 
 void LightClass::SetPointLightColor(int index, float red, float green, float blue, float alpha)
 {

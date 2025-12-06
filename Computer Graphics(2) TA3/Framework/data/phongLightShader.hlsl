@@ -144,9 +144,6 @@ float4 LightPixelShader(PixelInputType input) : SV_TARGET
             specular = pow(saturate(dot(reflection, input.viewDirection)), specularPower) * specularColor;
         }
     }
-	// ========== Point Lights ==========
-    // --- ★ 4. 포인트 라이트 계산 추가 ★ ---
-    // 디퓨즈가 켜져 있을 때만 포인트 라이트 계산
     if (isDiffuseOn > 0.1f)
     {
         for (int i = 0; i < NUM_POINT_LIGHTS; i++)
@@ -166,8 +163,8 @@ float4 LightPixelShader(PixelInputType input) : SV_TARGET
             // 거리 감쇠
             float attenuation = 1.0f / (distSquared + 1.0f);
             
-            // 포인트 라이트 기여도 = 색상 * 강도 * 감쇠 * 전체 강도 조절 (동찬님 구조 사용)
-            // 최종 색상(color)에 더합니다.
+            // 포인트 라이트 기여도 = 색상 * 강도 * 감쇠 * 전체 강도 조절
+            // 최종 색상(color)에 합
             color += (pointLightColor[i] * pointLightFactor * attenuation * pointLightIntensity);
         }
         // 포인트 라이트 계산 후 saturate

@@ -542,8 +542,6 @@ bool LightShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext,
 	// 픽셀 셰이더의 상수 버퍼 슬롯(register) 1번에 설정합니다.
 	deviceContext->PSSetConstantBuffers(1, 1, &m_lightToggleBuffer);
 
-	// --- ★ (추가) Point Light Buffer 데이터 전송 ★ ---
-	// ----------------------------------------------------
 	// 포인트 라이트 버퍼 Map
 	result = deviceContext->Map(m_pointLightBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	if (FAILED(result)) { return false; }
