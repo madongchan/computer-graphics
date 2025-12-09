@@ -81,6 +81,7 @@ private:
 
 	// 2. 배치된 물체 리스트 (여기에 수십 개의 물체가 담깁니다)
 	std::vector<GameObject> m_GameObjects;
+	std::vector<GameObject> m_GroundTiles;
 
 	// 3. 역할별 모델 리소스 변수 (여기에 FBX를 로딩합니다)
 	ModelClass* m_ModelWall;       // 벽 (cube.fbx 추천)

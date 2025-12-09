@@ -26,6 +26,7 @@ GraphicsClass::GraphicsClass()
 	m_pointLightIntensity = 1.0f; // 기본 강도 1.0
 
 	m_GameObjects = std::vector<GameObject>();
+	m_GroundTiles = std::vector<GameObject>();
 	m_ModelWall = 0;
 	m_ModelGround = 0;
 	m_ModelCrate = 0;
@@ -131,6 +132,37 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 
 	m_ModelGround = new ModelClass;
 	m_ModelGround->Initialize(m_D3D->GetDevice(), "./data/Ground.fbx", L"./data/Ground.dds");
+	// -----------------------------------------------------------
+	// [수정] 바닥 타일 10x10 배치 (Tiling)
+	// -----------------------------------------------------------
+
+	// 1. 요청하신 스케일 (텍스처가 예쁘게 나오는 크기)
+	float groundScale = 0.02f;
+
+	// 2. ★중요★ 타일 간격 (Gap)
+	// 모델의 원본 크기를 모르기 때문에 이 값을 조절해서 틈을 맞춰야 합니다.
+	// 팁: 실행 후 바닥 사이에 틈이 보이면 이 값을 줄이고, 겹치면 늘리세요.
+	float tileSpacing = 8.0f; // <-- 화면 보시면서 이 숫자를 조절하세요!
+
+	// 3. 10x10 배치 (-5 ~ +4 범위로 하면 중앙이 (0,0) 근처가 됩니다)
+	for (int x = -5; x < 5; x++)
+	{
+		for (int z = -5; z < 5; z++)
+		{
+			GameObject tile;
+			tile.model = m_ModelGround; // 모델 리소스 공유
+
+			// 위치 선정: (인덱스 * 간격)
+			// x는 -5, -4 ... 4 까지 변함
+			tile.position = XMFLOAT3(x * tileSpacing, 0.0f, z * tileSpacing);
+
+			tile.rotation = XMFLOAT3(0.0f, 0.0f, 0.0f);
+			tile.scale = XMFLOAT3(groundScale, groundScale, groundScale);
+
+			// 리스트에 추가
+			m_GroundTiles.push_back(tile);
+		}
+	}
 	//  지면 텍스처 배열 초기화
 	m_GroundTextures = new TextureArrayClass;
 	if (!m_GroundTextures) { return false; }
@@ -790,27 +822,42 @@ bool GraphicsClass::Render(wchar_t* debugText)
 			}
 		}
 
-		// 2. 바닥(Ground)은 별도 렌더링 (BumpMapShader 등 다른 셰이더를 쓰는 경우)
-		if (m_ModelGround)
-		{
-			worldMatrix = XMMatrixIdentity();
-			worldMatrix *= XMMatrixScaling(0.2f, 0.2f, 0.2f); // 바닥 크기 조절
-			worldMatrix *= XMMatrixTranslation(0.0f, 0.0f, 0.0f); // 바닥 위치
+		// -------------------------------------------------------------
+		// [수정] 바닥(Ground) 10x10 타일 렌더링
+		// -------------------------------------------------------------
+		// 기존의 단일 바닥 렌더링 코드는 주석 처리하거나 삭제하세요.
 
-			m_ModelGround->Render(m_D3D->GetDeviceContext());
-			// BumpMapShader 또는 LightShader 사용
-			result = m_BumpMapShader->Render(m_D3D->GetDeviceContext(), m_ModelGround->GetIndexCount(),
+		for (const auto& tile : m_GroundTiles)
+		{
+			// 월드 행렬 초기화
+			worldMatrix = XMMatrixIdentity();
+
+			// 1. 크기 (0.02f)
+			worldMatrix *= XMMatrixScaling(tile.scale.x, tile.scale.y, tile.scale.z);
+
+			// 2. 회전
+			worldMatrix *= XMMatrixRotationRollPitchYaw(tile.rotation.x, tile.rotation.y, tile.rotation.z);
+
+			// 3. 이동 (위치)
+			worldMatrix *= XMMatrixTranslation(tile.position.x, tile.position.y, tile.position.z);
+
+			// 모델 버퍼 준비
+			tile.model->Render(m_D3D->GetDeviceContext());
+
+			// 셰이더 렌더링 (BumpMapShader 사용)
+			result = m_BumpMapShader->Render(m_D3D->GetDeviceContext(), tile.model->GetIndexCount(),
 				worldMatrix, viewMatrix, projectionMatrix,
-				m_GroundTextures->GetTextureArray(), // 바닥 텍스처
+				m_GroundTextures->GetTextureArray(), // 바닥 텍스처 배열
 				m_Light->GetDirection(), m_Light->GetAmbientColor(), m_Light->GetDiffuseColor(),
 				m_Camera->GetPosition(), m_Light->GetSpecularColor(), m_Light->GetSpecularPower(),
 				m_isAmbientOn, m_isDiffuseOn, m_isSpecularOn, m_isNormalMapOn,
 				pointLightPositions, pointLightColors, m_pointLightIntensity
 			);
-			// 모델의 인덱스 개수를 3으로 나누면 삼각형 개수가 됨
-			if (m_ModelGround)
+
+			// 폴리곤 카운트 집계
+			if (tile.model)
 			{
-				totalPolygons += m_ModelGround->GetIndexCount() / 3;
+				totalPolygons += tile.model->GetIndexCount() / 3;
 			}
 		}
 
