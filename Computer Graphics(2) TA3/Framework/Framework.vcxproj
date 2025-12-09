@@ -208,7 +208,7 @@
     <None Include="data\Car.fbx" />
     <None Include="data\Crate.fbx" />
     <None Include="data\cube.fbx" />
-    <None Include="data\Floor.fbx" />
+    <None Include="data\Ground.fbx" />
     <None Include="data\Floor2.fbx" />
     <None Include="data\phongLightShader.hlsl">
       <FileType>Document</FileType>
@@ -220,9 +220,11 @@
     <None Include="data\Wall.fbx" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="data\Ground.dds" />
+    <Image Include="data\2.dds" />
     <Image Include="data\Floor_color.dds" />
     <Image Include="data\Floor_color2.dds" />
-    <Image Include="data\Floor_normal.dds" />
+    <Image Include="data\Ground_normal.dds" />
     <Image Include="data\Texture.dds" />
     <Image Include="data\skybox.dds" />
     <Image Include="data\Title.dds" />
@@ -244,6 +246,11 @@
   <ItemGroup>
     <None Include="data\Tent.fbx" />
     <None Include="data\textureShader.hlsl">
+      <FileType>Document</FileType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="debug.hlsl">
       <FileType>Document</FileType>
     </None>
   </ItemGroup>

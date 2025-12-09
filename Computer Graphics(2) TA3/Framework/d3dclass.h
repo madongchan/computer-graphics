@@ -64,6 +64,9 @@ public:
 	void EnableAlphaBlending();
 	void DisableAlphaBlending();
 
+	void TurnOnWireframe();  // 추가: 선만 그리는 모드
+	void TurnOffWireframe(); // 추가: 다시 색을 채우는 모드 (기본)
+
 private:
 	bool m_vsync_enabled;
 	int m_videoCardMemory;
@@ -77,6 +80,8 @@ private:
 	ID3D11DepthStencilState* m_depthStencilState; // 깊이버퍼 활성화용 렌더 상태 객체
 	ID3D11DepthStencilView* m_depthStencilView; // 깊이버퍼 뷰
 	ID3D11RasterizerState* m_rasterState; // 래스터라이저 상태 객체
+	ID3D11RasterizerState* m_rasterStateWireframe; // 추가: 선만 그리는 렌더 상태 객체
+
 	// 알파 블렌딩용 렌더 상태 객체들
 	ID3D11BlendState* m_alphaEnableBlendingState;
 	ID3D11BlendState* m_alphaDisableBlendingState;

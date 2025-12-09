@@ -41,7 +41,7 @@ bool TextClass::Initialize(ID3D11Device* d3dDevice, IDXGISwapChain* swapChain)
     if (FAILED(hr)) return false;
 
     hr = m_d2dRenderTarget->CreateSolidColorBrush(
-		D2D1::ColorF(D2D1::ColorF::GreenYellow), // Color
+		D2D1::ColorF(D2D1::ColorF::HotPink), // Color
         m_brush.GetAddressOf()
     );
     if (FAILED(hr)) return false;
@@ -59,7 +59,7 @@ bool TextClass::Initialize(ID3D11Device* d3dDevice, IDXGISwapChain* swapChain)
         DWRITE_FONT_WEIGHT_NORMAL,
         DWRITE_FONT_STYLE_NORMAL,
         DWRITE_FONT_STRETCH_NORMAL,
-        11.0f,              // font size
+        15.0f,              // font size
         L"",                // locale
         m_textFormat.GetAddressOf()
     );

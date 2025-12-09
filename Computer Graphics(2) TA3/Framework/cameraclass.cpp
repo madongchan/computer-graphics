@@ -94,30 +94,16 @@ void CameraClass::CheckGroundCollision()
 
 void CameraClass::UpdateCamera()
 {
-    // 기존 회전 및 이동 처리...
     XMMATRIX camRotationMatrix = XMMatrixRotationRollPitchYaw(camPitch, camYaw, 0);
     camTarget = XMVector3TransformCoord(DefaultForward, camRotationMatrix);
     camTarget = XMVector3Normalize(camTarget);
 
+    // 뷰 행렬용 업 벡터
     XMMATRIX RotateYTempMatrix = XMMatrixRotationY(camYaw);
-    camRight = XMVector3TransformCoord(DefaultRight, RotateYTempMatrix);
-    camUp = XMVector3TransformCoord(camUp, RotateYTempMatrix);
-    camForward = XMVector3TransformCoord(DefaultForward, RotateYTempMatrix);
+    camUp = XMVector3TransformCoord(XMVectorSet(0, 1, 0, 0), RotateYTempMatrix);
 
-    // 수평 이동만 적용 (Y축은 중력 시스템에서 처리)
-    XMVECTOR horizontalMovement = moveLeftRight * camRight + moveBackForward * camForward;
-    XMFLOAT3 horizontalMove;
-    XMStoreFloat3(&horizontalMove, horizontalMovement);
-
-    m_position.x += horizontalMove.x;
-    m_position.z += horizontalMove.z;
-
-    // camPosition 업데이트 (Y값은 중력 시스템에서 관리)
+    // 최종 뷰 행렬 생성
     camPosition = XMVectorSet(m_position.x, m_position.y, m_position.z, 0.0f);
-
-    moveLeftRight = 0.0f;
-    moveBackForward = 0.0f;
-
     camTarget = camPosition + camTarget;
     camView = XMMatrixLookAtLH(camPosition, camTarget, camUp);
 }
@@ -132,6 +118,26 @@ void CameraClass::Render()
 void CameraClass::GetViewMatrix(XMMATRIX& viewMatrix)
 {
     viewMatrix = m_viewMatrix;
+}
+
+// [추가] 현재 입력된 키 값(moveLeftRight 등)을 바탕으로 이동 벡터만 계산
+XMFLOAT3 CameraClass::GetFrameTranslation()
+{
+    // 현재 회전각을 기준으로 방향 벡터 계산
+    XMMATRIX RotateYTempMatrix = XMMatrixRotationY(camYaw);
+    camRight = XMVector3TransformCoord(DefaultRight, RotateYTempMatrix);
+    camForward = XMVector3TransformCoord(DefaultForward, RotateYTempMatrix);
+
+    // 이동 벡터 계산
+    XMVECTOR horizontalMovement = moveLeftRight * camRight + moveBackForward * camForward;
+
+    // 누적된 이동 입력값 초기화 (여기서 초기화해야 중복 이동 안 함)
+    moveLeftRight = 0.0f;
+    moveBackForward = 0.0f;
+
+    XMFLOAT3 result;
+    XMStoreFloat3(&result, horizontalMovement);
+    return result;
 }
 
 

@@ -159,7 +159,7 @@
     <None Include="data\bumpmapShader.hlsl">
       <Filter>리소스 파일</Filter>
     </None>
-    <None Include="data\Floor.fbx">
+    <None Include="data\Ground.fbx">
       <Filter>리소스 파일</Filter>
     </None>
     <None Include="data\textureShader.hlsl">
@@ -189,6 +189,9 @@
     <None Include="data\Floor2.fbx">
       <Filter>리소스 파일</Filter>
     </None>
+    <None Include="debug.hlsl">
+      <Filter>리소스 파일</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="data\Texture.dds">
@@ -200,7 +203,7 @@
     <Image Include="data\Floor_color.dds">
       <Filter>리소스 파일</Filter>
     </Image>
-    <Image Include="data\Floor_normal.dds">
+    <Image Include="data\Ground_normal.dds">
       <Filter>리소스 파일</Filter>
     </Image>
     <Image Include="data\Title.dds">
@@ -213,6 +216,12 @@
       <Filter>리소스 파일</Filter>
     </Image>
     <Image Include="data\Floor_color2.dds">
+      <Filter>리소스 파일</Filter>
+    </Image>
+    <Image Include="data\Ground.dds">
+      <Filter>리소스 파일</Filter>
+    </Image>
+    <Image Include="data\2.dds">
       <Filter>리소스 파일</Filter>
     </Image>
   </ItemGroup>

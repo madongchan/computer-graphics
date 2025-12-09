@@ -70,8 +70,10 @@ public:
 	int GetIndexCount();
 	ID3D11ShaderResourceView* GetTexture(); //
 
+	// 모델의 로컬 공간 기준 최소/최대 좌표를 반환하는 함수 추가
+	void GetMinMax(XMFLOAT3& min, XMFLOAT3& max) { min = m_minVertex; max = m_maxVertex; }
+	bool InitializeGeneratedCube(ID3D11Device* device);
 private:
-	// --- 수정 2: 내부 헬퍼 함수로 변경 ---
 	// Initialize() 내부에서 호출될 함수들입니다.
 	bool InitializeBuffers(ID3D11Device*);
 	bool LoadModel(const char*); // CString이 아닌 char*를 받도록 수정
@@ -79,8 +81,6 @@ private:
 	void ShutdownBuffers();
 	void RenderBuffers(ID3D11DeviceContext*);
 
-	// --- 수정 3: 불필요한 함수 선언 제거 ---
-	// (LoadTexture, ReleaseModel 등은 Initialize/Shutdown이 처리)
 
 private:
 	ID3D11Buffer* m_vertexBuffer, * m_indexBuffer;
@@ -91,7 +91,9 @@ private:
 	VertexType* m_vertices;     // RAM에 임시 저장할 정점 배열
 	unsigned long* m_indices;  // RAM에 임시 저장할 인덱스 배열
 
-	TextureClass* m_Texture; //
+	TextureClass* m_Texture;
+
+	XMFLOAT3 m_minVertex, m_maxVertex; // 바운딩 박스 좌표 저장
 };
 
 #endif

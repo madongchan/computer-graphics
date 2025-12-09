@@ -27,6 +27,7 @@ public:
     void UpdateCamera();
     void Render();
     void GetViewMatrix(XMMATRIX&);
+    XMFLOAT3 GetFrameTranslation();
 
     // 점프 관련 함수 추가
     void Jump();

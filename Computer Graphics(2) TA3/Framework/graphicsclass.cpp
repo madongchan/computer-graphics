@@ -40,7 +40,8 @@ GraphicsClass::GraphicsClass()
 	m_PolygonCount = 0;
 	m_ScreenWidth = 0.0f;
 	m_ScreenHeight = 0.0f;
-	m_SceneState = SceneState::TITLE;
+	m_SceneState = SceneState::MainScene;
+	m_showDebug = true; // 기본값: 켜짐
 }
 GraphicsClass::GraphicsClass(const GraphicsClass& other)
 {
@@ -129,13 +130,13 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	m_ModelWall->Initialize(m_D3D->GetDevice(), "./data/Wall.fbx", L"./data/Texture.dds"); // 벽용 큐브
 
 	m_ModelGround = new ModelClass;
-	m_ModelGround->Initialize(m_D3D->GetDevice(), "./data/Floor.fbx", L"./data/Floor_color.dds");
+	m_ModelGround->Initialize(m_D3D->GetDevice(), "./data/Ground.fbx", L"./data/Ground.dds");
 	//  지면 텍스처 배열 초기화
 	m_GroundTextures = new TextureArrayClass;
 	if (!m_GroundTextures) { return false; }
 	result = m_GroundTextures->Initialize(m_D3D->GetDevice(),
-		L"./data/Texture.dds",  // (지면 색상 텍스처)
-		L"./data/Floor_normal.dds"); // (지면 노멀맵 텍스처)
+		L"./data/Ground.dds",  // (지면 색상 텍스처)
+		L"./data/Ground_normal.dds"); // (지면 노멀맵 텍스처)
 	if (!result)
 	{
 		MessageBox(hwnd, L"Could not initialize the ground texture array object.", L"Error", MB_OK);
@@ -168,15 +169,14 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	// 화면 보시면서 0.002f ~ 0.004f 사이에서 조절하세요.
 	float commonScale = 0.015f;
 	float commonScaleY = commonScale + 0.005f; // Y축은 살짝 더 키움
-	float modelYOffset = 0.3f; // 모델별 Y축 오프셋 (필요시 조절)
+	float modelYOffset = 0.35f; // 모델별 Y축 오프셋 (필요시 조절)
 
 	// -----------------------------------------------------------
 	// [A] 벽 (Walls) - "울타리 스타일" (여러 개 이어 붙이기)
 	// -----------------------------------------------------------
 
-	// 벽 모델 하나하나의 크기 설정 (늘리지 않고 원래 비율 유지하거나 살짝만 조정)
-	// 큐브(cube.fbx)를 벽돌 하나라고 생각하세요.
-	float brickScale = 0.02f; // 개별 벽돌 크기 (모델에 따라 조절 필요)
+	// 각 모델의 스케일
+	float brickScale = 0.02f;
 
 	// 맵 테두리 설정
 	float mapLimit = 30.0f;    // 맵 끝 좌표
@@ -304,6 +304,19 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		}
 	}
 
+	// [1] 디버그 모델 초기화 (파일 로딩 X, 코드 생성 O)
+	m_DebugModel = new ModelClass;
+	// InitializeGeneratedCube 호출! (경로 인자 필요 없음)
+	result = m_DebugModel->InitializeGeneratedCube(m_D3D->GetDevice());
+
+	// [2] 디버그 셰이더 초기화 (debug.hlsl 로드)
+	m_DebugShader = new TextureShaderClass;
+	// 기존 TextureShaderClass를 쓰지만 파일만 debug.hlsl로 교체
+	result = m_DebugShader->InitializeShader(m_D3D->GetDevice(), hwnd, L"data/debug.hlsl");
+	// 주의: TextureShaderClass::Initialize()는 파일명이 고정되어 있을 수 있으니, 
+	// InitializeShader를 public으로 열거나, TextureShaderClass를 복사해서 쓰세요.
+	// 만약 수정이 어렵다면 data/textureShader.hlsl 내용을 아까 만든 빨간색 코드로 덮어쓰세요! (가장 쉬움)
+
 	// 범프맵 셰이더 초기화
 	m_BumpMapShader = new BumpMapShaderClass;
 	if (!m_BumpMapShader) { return false; }
@@ -404,28 +417,156 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 
 bool GraphicsClass::Frame(InputClass* Input, double deltaTime, int fps, float cpuUsage)
 {
-	bool result;
+	// -------------------------------------------------------------
+	// 1. 기본 설정 및 변수 준비
+	// -------------------------------------------------------------
 	m_FPS = fps;
 	m_CPUUsage = cpuUsage;
-	// 카메라 입력 처리 및 중력 적용
-	// 토글 키로 카메라 컨트롤 모드 전환
-	if (Input->IsKeyToggle(DIK_F1))
-	{
-		m_isCameraControlMode = !m_isCameraControlMode;
-	}
+
+	// 프레임 시작 시점의 위치 (이전 프레임의 최종 위치)
+	XMFLOAT3 currentPos = m_Camera->GetPosition();
+
+	// 키보드 입력 처리 (카메라 내부 변수 갱신)
 	if (m_isCameraControlMode)
 	{
 		HandleInput(Input, deltaTime);
-		m_Camera->ApplyGravity(static_cast<float>(deltaTime));
 	}
-	
-	// Render the graphics scene.
-	// (기존 코드는 Render 호출이 없었지만, 여기서 해줘야 합니다)
-	result = Render();
-	if (!result)
+
+	// ★ 핵심 1: 카메라 클래스에서 "이동하려는 양(Vector)"만 받아옵니다.
+	// (이때 m_Camera 내부의 실제 위치는 변하지 않아야 합니다. 아까 수정한 GetFrameTranslation 사용)
+	XMFLOAT3 moveVector = m_Camera->GetFrameTranslation();
+
+	// -------------------------------------------------------------
+	// 2. 점프 및 중력 (Y축) 물리 계산
+	// -------------------------------------------------------------
+	// 점프/중력용 변수 (멤버 변수로 선언하면 더 좋지만, 여기선 static으로 유지)
+	static float verticalVelocity = 0.0f;
+	const float GRAVITY = -20.0f;       // 중력 가속도
+	const float JUMP_FORCE = 10.0f;     // 점프 힘
+	const float GROUND_LEVEL = 2.0f;    // 바닥 높이 (하드코딩)
+
+	// (1) 점프 입력 확인 (바닥에 있을 때만 가능)
+	// 약간의 오차(epsilon)를 두어 바닥 체크
+	bool isGrounded = (currentPos.y <= GROUND_LEVEL + 0.01f);
+
+	if (isGrounded && Input->IsKeyPressed(DIK_SPACE))
 	{
-		return false;
+		verticalVelocity = JUMP_FORCE; // 위로 솟구침
+		isGrounded = false;
 	}
+
+	// (2) 중력 적용 (공중에 있을 때만)
+	if (!isGrounded)
+	{
+		verticalVelocity += GRAVITY * (float)deltaTime;
+	}
+
+	// (3) Y축 이동량 계산
+	float deltaY = verticalVelocity * (float)deltaTime;
+	float nextY = currentPos.y + deltaY;
+
+	// (4) 바닥 충돌 처리 (땅 뚫기 방지)
+	if (nextY < GROUND_LEVEL)
+	{
+		nextY = GROUND_LEVEL;
+		verticalVelocity = 0.0f; // 땅에 닿았으니 속도 초기화
+		isGrounded = true;
+	}
+
+	// -------------------------------------------------------------
+	// 3. 충돌 검사 및 이동 (X, Z축 분리 - 슬라이딩 구현)
+	// -------------------------------------------------------------
+
+	// 플레이어 충돌 박스 크기
+	float pRadius = 0.5f;
+	float pHeight = 2.0f;
+	float footY = nextY - 1.8f; // 눈높이(1.8)를 뺀 발바닥 위치
+
+	// 최종적으로 이동할 목표 좌표
+	XMFLOAT3 targetPos = { currentPos.x, nextY, currentPos.z };
+
+	// 디버그 텍스트용 플래그
+	bool isCollidedX = false;
+	bool isCollidedZ = false;
+	int collidedIndex = -1;
+
+	// [Step A] X축 이동 시도
+	float testX = currentPos.x + moveVector.x;
+
+	// X축 이동 가상 박스 생성
+	XMFLOAT3 minX = { testX - pRadius, footY, currentPos.z - pRadius };
+	XMFLOAT3 maxX = { testX + pRadius, footY + pHeight, currentPos.z + pRadius };
+
+	for (int i = 0; i < m_GameObjects.size(); ++i)
+	{
+		if (!m_GameObjects[i].model || m_GameObjects[i].model == m_ModelGround) continue;
+
+		XMFLOAT3 worldMin, worldMax;
+		GetWorldAABB(m_GameObjects[i], worldMin, worldMax); // 회전 반영 AABB
+
+		// Y축 무시하고 검사 (CheckAABBCollision 함수는 Y검사 주석 처리된 상태여야 함)
+		if (CheckAABBCollision(minX, maxX, worldMin, worldMax))
+		{
+			isCollidedX = true;
+			collidedIndex = i;
+			break;
+		}
+	}
+
+	// X축 충돌 없으면 이동 적용, 있으면 현상 유지(이동 안 함)
+	if (!isCollidedX) targetPos.x = testX;
+
+
+	// [Step B] Z축 이동 시도 (X축은 이미 결정됨)
+	float testZ = currentPos.z + moveVector.z;
+
+	// Z축 이동 가상 박스 생성 (X는 targetPos.x 사용 - 슬라이딩 핵심)
+	XMFLOAT3 minZ = { targetPos.x - pRadius, footY, testZ - pRadius };
+	XMFLOAT3 maxZ = { targetPos.x + pRadius, footY + pHeight, testZ + pRadius };
+
+	for (int i = 0; i < m_GameObjects.size(); ++i)
+	{
+		if (!m_GameObjects[i].model || m_GameObjects[i].model == m_ModelGround) continue;
+
+		XMFLOAT3 worldMin, worldMax;
+		GetWorldAABB(m_GameObjects[i], worldMin, worldMax);
+
+		if (CheckAABBCollision(minZ, maxZ, worldMin, worldMax))
+		{
+			isCollidedZ = true;
+			collidedIndex = i;
+			break;
+		}
+	}
+
+	// Z축 충돌 없으면 이동 적용
+	if (!isCollidedZ) targetPos.z = testZ;
+
+
+	// -------------------------------------------------------------
+	// 4. 최종 위치 적용 (Render 전, 유일한 위치 갱신 시점)
+	// -------------------------------------------------------------
+	m_Camera->SetPosition(targetPos.x, targetPos.y, targetPos.z);
+
+
+	// -------------------------------------------------------------
+	// 5. 디버그 정보 출력 메시지 생성
+	// -------------------------------------------------------------
+	static wchar_t debugMsg[256];
+	if (isCollidedX || isCollidedZ)
+	{
+		swprintf_s(debugMsg, 256, L"COLLISION! Idx:%d / Blocked: %s%s",
+			collidedIndex,
+			isCollidedX ? L"[X] " : L"",
+			isCollidedZ ? L"[Z]" : L"");
+	}
+	else
+	{
+		swprintf_s(debugMsg, 256, L"Status: Free / VelY: %.1f", verticalVelocity);
+	}
+
+	// 렌더링
+	if (!Render(debugMsg)) return false;
 
 	return true;
 }
@@ -523,10 +664,14 @@ void GraphicsClass::HandleInput(InputClass* Input, double deltaTime)
 		{
 			m_isNormalMapOn = !m_isNormalMapOn;
 		}
+		if (Input->IsKeyToggle(DIK_NUMPAD1))
+		{
+			m_showDebug = !m_showDebug;
+		}
 	}
 }
 
-bool GraphicsClass::Render()
+bool GraphicsClass::Render(wchar_t* debugText)
 {
 	XMMATRIX worldMatrix, viewMatrix, projectionMatrix, orthoMatrix; // orthoMatrix 변수 선언
 	XMMATRIX baseViewMatrix; // UI용 고정 뷰 행렬
@@ -649,7 +794,7 @@ bool GraphicsClass::Render()
 		if (m_ModelGround)
 		{
 			worldMatrix = XMMatrixIdentity();
-			worldMatrix *= XMMatrixScaling(0.035f, 0.01f, 0.035f); // 바닥 크기 조절
+			worldMatrix *= XMMatrixScaling(0.2f, 0.2f, 0.2f); // 바닥 크기 조절
 			worldMatrix *= XMMatrixTranslation(0.0f, 0.0f, 0.0f); // 바닥 위치
 
 			m_ModelGround->Render(m_D3D->GetDeviceContext());
@@ -668,6 +813,34 @@ bool GraphicsClass::Render()
 				totalPolygons += m_ModelGround->GetIndexCount() / 3;
 			}
 		}
+
+	// =============================================================
+	// [충돌 박스 디버깅: BeginScene과 EndScene 사이에서 그려야 보입니다!]
+	// =============================================================
+
+		if (m_showDebug) // ★ 1번 키로 제어됨
+		{
+			// 1. 플레이어 충돌 박스 그리기
+			XMFLOAT3 camPos = m_Camera->GetPosition();
+			float playerR = 0.5f;
+			float playerH = 2.0f;
+			XMFLOAT3 pMin = { camPos.x - playerR, camPos.y - 2.0f, camPos.z - playerR }; // 높이 보정 주의
+			XMFLOAT3 pMax = { camPos.x + playerR, camPos.y,        camPos.z + playerR };
+			RenderDebugAABB(pMin, pMax);
+
+			// 2. 장애물 충돌 박스 그리기
+			for (const GameObject& obj : m_GameObjects)
+			{
+				if (obj.model == nullptr) continue;
+				if (obj.model == m_ModelGround) continue;
+
+				XMFLOAT3 worldMin, worldMax;
+				GetWorldAABB(obj, worldMin, worldMax);
+				RenderDebugAABB(worldMin, worldMax);
+			}
+		}
+		// =============================================================
+
 		// 텍스트 출력
 		wchar_t fpsText[64], 
 			cpuText[64], 
@@ -680,31 +853,168 @@ bool GraphicsClass::Render()
 		swprintf_s(polyText, 64, L"POLYGON: %d", totalPolygons);
 		swprintf_s(ObjectText, 64, L"Model Count: %d", totalObjects);
 		swprintf_s(resolText, 64, L"RESOLUTION: %d X %d", static_cast<int>(m_ScreenWidth), static_cast<int>(m_ScreenHeight));
+		// ★★★ 디버그 메시지 화면 출력 ★★★
+		// debugText가 들어왔다면(충돌 정보 등) 출력
+		if (debugText)
+		{
+			// 빨간색이나 노란색으로 잘 보이게 출력 (DrawTextLine 함수에 색상 인자가 있다면 활용)
+			m_Text->DrawTextLine(debugText, 10.0f, 100.0f);
 
+			// 플레이어 좌표도 출력하면 도움됨
+			wchar_t posText[64];
+			XMFLOAT3 p = m_Camera->GetPosition();
+			swprintf_s(posText, 64, L"Pos: %.2f, %.2f, %.2f", p.x, p.y, p.z);
+			m_Text->DrawTextLine(posText, 10.0f, 120.0f);
+		}
 		// 텍스트 렌더링
 		m_D3D->TurnZBufferOff();
 		m_D3D->EnableAlphaBlending();
 
 		m_Text->DrawTextLine(fpsText, 10.0f, 0.0f);
-		m_Text->DrawTextLine(cpuText, 10.0f, 11.0f);
-		m_Text->DrawTextLine(polyText, 10.0f, 22.0f);
-		m_Text->DrawTextLine(ObjectText, 10.0f, 33.0f);
-		m_Text->DrawTextLine(resolText, 10.0f, 44.0f);
+		m_Text->DrawTextLine(cpuText, 10.0f, 15.0f);
+		m_Text->DrawTextLine(polyText, 10.0f, 30.0f);
+		m_Text->DrawTextLine(ObjectText, 10.0f, 45.0f);
+		m_Text->DrawTextLine(resolText, 10.0f, 60.0f);
 		// End the text drawing.
 		m_D3D->DisableAlphaBlending();
 		m_D3D->TurnZBufferOn();
 		break;
 	}
 
-	// 5. 씬 종료
-	m_D3D->EndScene();
+	
 
+	m_D3D->EndScene(); // <-- 이 함수 바로 위에 있어야 합니다.
 	return true;
 }
 
+bool GraphicsClass::CheckAABBCollision(XMFLOAT3 min1, XMFLOAT3 max1, XMFLOAT3 min2, XMFLOAT3 max2)
+{
+	// X축 검사 (좌우)
+	if (max1.x < min2.x || min1.x > max2.x) return false;
+
+	// Z축 검사 (앞뒤)
+	if (max1.z < min2.z || min1.z > max2.z) return false;
+	// Y축 검사 (상하)
+	if (max1.y < min2.y || min1.y > max2.y) return false;
+
+	// X, Y, Z가 모두 겹칠 때만 충돌
+	return true;
+}
+
+void GraphicsClass::RenderDebugAABB(XMFLOAT3 min, XMFLOAT3 max)
+{
+	// 디버그 모델이 없으면 리턴
+	if (!m_DebugModel) return;
+
+	XMMATRIX worldMatrix, viewMatrix, projectionMatrix;
+
+	// 1. 카메라 및 투영 행렬 가져오기
+	m_Camera->GetViewMatrix(viewMatrix);
+	m_D3D->GetProjectionMatrix(projectionMatrix);
+
+	// 2. 타겟 크기(Size) 계산
+	// (우리가 만든 큐브는 기본 크기가 1.0이므로, 스케일값이 곧 크기가 됩니다)
+	float sizeX = max.x - min.x;
+	float sizeY = max.y - min.y;
+	float sizeZ = max.z - min.z;
+
+	// 너무 작아서 안 보이는 경우 방지 (최소 크기 보장)
+	if (sizeX < 0.001f) sizeX = 0.001f;
+	if (sizeY < 0.001f) sizeY = 0.001f;
+	if (sizeZ < 0.001f) sizeZ = 0.001f;
+
+	// 3. 타겟 중심(Center) 계산
+	float centerX = (min.x + max.x) * 0.5f;
+	float centerY = (min.y + max.y) * 0.5f;
+	float centerZ = (min.z + max.z) * 0.5f;
+
+	// 4. 월드 행렬 생성 (스케일 -> 이동)
+	// 복잡한 오프셋 계산 없이 깔끔하게 스케일과 이동만 적용하면 됩니다.
+	worldMatrix = XMMatrixScaling(sizeX, sizeY, sizeZ) * XMMatrixTranslation(centerX, centerY, centerZ);
+
+	// 5. 렌더링 설정 (와이어프레임 + Z버퍼 끄기)
+	m_D3D->TurnOnWireframe();
+	// m_D3D->TurnZBufferOff(); // 벽 뒤에 있는 박스도 보고 싶으면 주석 해제 (D3DClass에 함수 필요)
+
+	// 모델 버퍼 등록
+	m_DebugModel->Render(m_D3D->GetDeviceContext());
+
+	// 6. 셰이더 렌더링 (빨간색 출력)
+	// m_DebugShader(또는 m_TextureShader)를 사용하되 텍스처 인자에 nullptr을 넣습니다.
+	// (debug.hlsl을 사용한다면 텍스처가 없어도 빨간색을 리턴합니다)
+	if (m_DebugShader)
+	{
+		m_DebugShader->Render(m_D3D->GetDeviceContext(), m_DebugModel->GetIndexCount(),
+			worldMatrix, viewMatrix, projectionMatrix,
+			nullptr); // <--- 텍스처 없이 렌더링
+	}
+	else
+	{
+		// 만약 m_DebugShader 변수를 따로 안 만들고 m_TextureShader를 재사용한다면 이렇게 쓰세요.
+		m_TextureShader->Render(m_D3D->GetDeviceContext(), m_DebugModel->GetIndexCount(),
+			worldMatrix, viewMatrix, projectionMatrix,
+			nullptr);
+	}
+
+	// 7. 설정 복구
+	// m_D3D->TurnZBufferOn(); // Z버퍼 껐다면 복구 필요
+	m_D3D->TurnOffWireframe();
+}
+
+void GraphicsClass::GetWorldAABB(const GameObject& obj, XMFLOAT3& outMin, XMFLOAT3& outMax)
+{
+	// 1. 모델의 로컬 AABB (회전 전)
+	XMFLOAT3 localMin, localMax;
+	obj.model->GetMinMax(localMin, localMax);
+
+	// 2. 로컬 AABB의 8개 코너 점 생성
+	XMVECTOR corners[8];
+	corners[0] = XMVectorSet(localMin.x, localMin.y, localMin.z, 1.0f);
+	corners[1] = XMVectorSet(localMin.x, localMin.y, localMax.z, 1.0f);
+	corners[2] = XMVectorSet(localMin.x, localMax.y, localMin.z, 1.0f);
+	corners[3] = XMVectorSet(localMin.x, localMax.y, localMax.z, 1.0f);
+	corners[4] = XMVectorSet(localMax.x, localMin.y, localMin.z, 1.0f);
+	corners[5] = XMVectorSet(localMax.x, localMin.y, localMax.z, 1.0f);
+	corners[6] = XMVectorSet(localMax.x, localMax.y, localMin.z, 1.0f);
+	corners[7] = XMVectorSet(localMax.x, localMax.y, localMax.z, 1.0f);
+
+	// 3. 월드 행렬 생성 (크기 -> 회전 -> 이동) ★★★ 회전 반영!
+	XMMATRIX worldMatrix = XMMatrixIdentity();
+	worldMatrix *= XMMatrixScaling(obj.scale.x, obj.scale.y, obj.scale.z);
+	worldMatrix *= XMMatrixRotationRollPitchYaw(obj.rotation.x, obj.rotation.y, obj.rotation.z);
+	worldMatrix *= XMMatrixTranslation(obj.position.x, obj.position.y, obj.position.z);
+
+	// 4. 8개 점을 월드 좌표로 변환 후 새로운 Min/Max 찾기
+	XMVECTOR vMin = XMVectorSet(FLT_MAX, FLT_MAX, FLT_MAX, 0.0f);
+	XMVECTOR vMax = XMVectorSet(-FLT_MAX, -FLT_MAX, -FLT_MAX, 0.0f);
+
+	for (int i = 0; i < 8; ++i)
+	{
+		corners[i] = XMVector3TransformCoord(corners[i], worldMatrix);
+		vMin = XMVectorMin(vMin, corners[i]);
+		vMax = XMVectorMax(vMax, corners[i]);
+	}
+
+	XMStoreFloat3(&outMin, vMin);
+	XMStoreFloat3(&outMax, vMax);
+}
 
 void GraphicsClass::Shutdown()
 {
+	// Release the debug shader object.
+	if (m_DebugShader)
+	{
+		m_DebugShader->Shutdown();
+		delete m_DebugShader;
+		m_DebugShader = 0;
+	}
+	// Release the debug model object.
+	if (m_DebugModel)
+	{
+		m_DebugModel->Shutdown();
+		delete m_DebugModel;
+		m_DebugModel = 0;
+	}
 	if (m_Text)
 	{
 		m_Text->Shutdown();

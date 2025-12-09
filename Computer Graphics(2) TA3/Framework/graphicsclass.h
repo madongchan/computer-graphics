@@ -67,7 +67,12 @@ public:
 private:
 	// HandleInput 헬퍼 함수 추가
 	void HandleInput(InputClass* Input, double deltaTime);
-	bool Render();
+	bool Render(wchar_t* debugText);
+
+	// 충돌 검사 헬퍼 함수 선언
+	bool CheckAABBCollision(XMFLOAT3 min1, XMFLOAT3 max1, XMFLOAT3 min2, XMFLOAT3 max2);
+	void RenderDebugAABB(XMFLOAT3 min, XMFLOAT3 max);
+	void GetWorldAABB(const GameObject& obj, XMFLOAT3& outMin, XMFLOAT3& outMax);
 
 private:
 	SceneState m_SceneState;
@@ -87,11 +92,14 @@ private:
 	ModelClass* m_ModelCar;        // 차량 (엄폐물)
 	ModelClass* m_ModelTent;       // 텐트 (스폰 지점)
 	ModelClass* m_ModelTree;       // 나무 (외곽 장식)
+
+	TextureShaderClass* m_DebugShader;
 	
 	LightShaderClass* m_LightShader;
 	LightClass* m_Light;
 
 	TextureShaderClass* m_TextureShader;
+	ModelClass* m_DebugModel;
 
 	BitmapClass* m_TitleScreen;
 	BitmapClass* m_TutorialScreen;
@@ -127,6 +135,8 @@ private:
 	long m_PolygonCount;
 	float m_ScreenWidth;
 	float m_ScreenHeight;
+
+	bool m_showDebug; // 디버그 렌더링 토글용 변수
 };
 
 #endif

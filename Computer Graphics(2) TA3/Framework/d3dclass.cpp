@@ -373,14 +373,26 @@ bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hw
 
 	// Create the rasterizer state from the description we just filled out.
 	result = m_device->CreateRasterizerState(&rasterDesc, &m_rasterState);
-	if(FAILED(result))
-	{
-		return false;
-	}
+	if(FAILED(result)) return false;
 
 	// Now set the rasterizer state.
 	m_deviceContext->RSSetState(m_rasterState);
 	
+	// [와이어프레임 래스터라이저 생성]
+	rasterDesc.AntialiasedLineEnable = false;
+	rasterDesc.CullMode = D3D11_CULL_FRONT;
+	rasterDesc.DepthBias = 0;
+	rasterDesc.DepthBiasClamp = 0.0f;
+	rasterDesc.DepthClipEnable = true;
+	rasterDesc.FillMode = D3D11_FILL_WIREFRAME; // <--- 핵심: 속을 비우고 선만 그림
+	rasterDesc.FrontCounterClockwise = false;
+	rasterDesc.MultisampleEnable = false;
+	rasterDesc.ScissorEnable = false;
+	rasterDesc.SlopeScaledDepthBias = 0.0f;
+
+	result = m_device->CreateRasterizerState(&rasterDesc, &m_rasterStateWireframe);
+	if (FAILED(result)) return false;
+
 	// [추가] 1. 알파 블렌딩을 켜는 상태(Enable) 설정
 	D3D11_BLEND_DESC blendStateDescription;
 	ZeroMemory(&blendStateDescription, sizeof(D3D11_BLEND_DESC));
@@ -469,6 +481,7 @@ void D3DClass::Shutdown()
 		m_rasterState->Release();
 		m_rasterState = 0;
 	}
+	if (m_rasterStateWireframe) { m_rasterStateWireframe->Release(); m_rasterStateWireframe = 0; }
 	// [추가] 블렌드 상태 해제
 	if (m_alphaEnableBlendingState)
 	{
@@ -642,6 +655,27 @@ void D3DClass::DisableAlphaBlending()
 {
 	float blendFactor[4] = { 0.f, 0.f, 0.f, 0.f };
 	m_deviceContext->OMSetBlendState(m_alphaDisableBlendingState, blendFactor, 0xffffffff);
+}
+
+// 모드 전환 함수 구현
+void D3DClass::TurnOnWireframe()
+{
+	// 1. 와이어프레임 모드 적용
+	m_deviceContext->RSSetState(m_rasterStateWireframe);
+
+	// [추가] 깊이 검사(Z-Buffer)를 끄면 벽 뒤에 있는 박스도 투시해서 보입니다.
+	// (만약 m_depthDisabledStencilState가 없다면 이 부분은 건너뛰어도 됩니다.
+	//  하지만 보통 Framework에 TurnZBufferOff() 함수가 있습니다.)
+	TurnZBufferOff();
+}
+
+void D3DClass::TurnOffWireframe()
+{
+	// 1. 솔리드(채우기) 모드 복구
+	m_deviceContext->RSSetState(m_rasterState);
+
+	// [추가] 깊이 검사 다시 켜기
+	TurnZBufferOn();
 }
 
 // ★ 렌더 상태 변경 함수 4개 구현
