@@ -29,10 +29,10 @@ void SkinModel::Release()
 
 void SkinModel::Render(ID3D11DeviceContext * dc)
 {
-	//¸Þ½¬ Á¤º¸°¡ ¾øÀ¸¸é ¸®ÅÏ
+	//ï¿½Þ½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 	if (_meshList.empty()) 	return;
 
-	//·»´õ¸µÀ» À§ÇÑ ¹öÆÛ¼ÂÆÃ
+	//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Û¼ï¿½ï¿½ï¿½
 	SetRenderBuffers(dc);
 		
 	//ModelTM Update
@@ -45,7 +45,7 @@ void SkinModel::Render(ID3D11DeviceContext * dc)
 		if (_meshByMaterial[i].empty())
 			continue;
 
-		//¸¶Å×¸®¾ó ¼ÂÆÃ
+		//ï¿½ï¿½ï¿½×¸ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 		auto texData = _materialList[i].diffuseMap;
 
 		if (texData)
@@ -54,7 +54,7 @@ void SkinModel::Render(ID3D11DeviceContext * dc)
 		//Mesh Render
 		for (auto mesh : _meshByMaterial[i]) {
 			
-			//º» Á¤º¸ ¼ÂÆÃ
+			//ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 			if (!mesh->boneList.empty()) {
 				SetShader(_skinShader, false);
 				vector<XMMATRIX> calcBoneList;
@@ -63,7 +63,7 @@ void SkinModel::Render(ID3D11DeviceContext * dc)
 
 				RM_SHADER.SetShaderParameters(dc, calcBoneList);
 			}
-			//º» Á¤º¸°¡ ¾ø´Â °æ¿ì
+			//ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
 			else {
 				SetShader(_texShader, false);
 
@@ -72,7 +72,7 @@ void SkinModel::Render(ID3D11DeviceContext * dc)
 			}
 			RM_SHADER.SetShaderParameters(dc, _tmModel);
 
-			//·»´õ
+			//ï¿½ï¿½ï¿½ï¿½
 			GetShader()->IndexRender(dc, mesh->count, mesh->start);
 		}
 	}
@@ -129,25 +129,21 @@ void SkinModel::UpdateNodeTM()
 	}
 }
 
-bool SkinModel::LoadTexture(const WCHAR* filename)
+bool SkinModelClass::LoadTexture(ID3D11Device* device, const WCHAR* filename)
 {
 	bool result;
-
-
 	// Create the texture object.
 	m_Texture = new TextureClass;
 	if (!m_Texture)
 	{
 		return false;
 	}
-
 	// Initialize the texture object.
-	result = m_Texture->Initialize(DEVICEMANAGER.GetDevice(), filename);
+	result = m_Texture->Initialize(device, filename);
 	if (!result)
 	{
 		return false;
 	}
-
 	return true;
 }
 

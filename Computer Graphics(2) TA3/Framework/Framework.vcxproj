@@ -157,6 +157,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Animation.cpp" />
+    <ClCompile Include="BaseModel.cpp" />
     <ClCompile Include="bitmapclass.cpp" />
     <ClCompile Include="BumpMapShaderClass.cpp" />
     <ClCompile Include="cameraclass.cpp" />
@@ -170,6 +171,9 @@
     <ClCompile Include="lightshaderclass.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="modelclass.cpp" />
+    <ClCompile Include="ModelLoader.cpp" />
+    <ClCompile Include="PlayerClass.cpp" />
+    <ClCompile Include="SkinModelClass.cpp" />
     <ClCompile Include="SkinShaderClass.cpp" />
     <ClCompile Include="SkyboxClass.cpp" />
     <ClCompile Include="SkyboxShaderClass.cpp" />
@@ -184,6 +188,7 @@
   <ItemGroup>
     <ClInclude Include="AlignedAllocationPolicy.h" />
     <ClInclude Include="Animation.h" />
+    <ClInclude Include="BaseModel.h" />
     <ClInclude Include="bitmapclass.h" />
     <ClInclude Include="BumpMapShaderClass.h" />
     <ClInclude Include="cameraclass.h" />
@@ -191,11 +196,16 @@
     <ClInclude Include="d3dclass.h" />
     <ClInclude Include="DDSTextureLoader.h" />
     <ClInclude Include="fpsclass.h" />
+    <ClInclude Include="GameObject.h" />
     <ClInclude Include="graphicsclass.h" />
     <ClInclude Include="inputclass.h" />
     <ClInclude Include="lightclass.h" />
     <ClInclude Include="lightshaderclass.h" />
     <ClInclude Include="modelclass.h" />
+    <ClInclude Include="ModelLoader.h" />
+    <ClInclude Include="ModelStructure.h" />
+    <ClInclude Include="PlayerClass.h" />
+    <ClInclude Include="SkinModelClass.h" />
     <ClInclude Include="SkinShaderClass.h" />
     <ClInclude Include="SkyboxClass.h" />
     <ClInclude Include="SkyboxShaderClass.h" />
@@ -214,14 +224,18 @@
     <None Include="data\cube.fbx" />
     <None Include="data\Ground.fbx" />
     <None Include="data\Floor2.fbx" />
+    <None Include="data\Idle.fbx" />
+    <None Include="data\Left Walking.fbx" />
     <None Include="data\phongLightShader.hlsl">
       <FileType>Document</FileType>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
       </ExcludedFromBuild>
     </None>
     <None Include="data\Player.fbx" />
+    <None Include="data\Right Walking.fbx" />
     <None Include="data\Tire.fbx" />
     <None Include="data\Tree.fbx" />
+    <None Include="data\Walking.fbx" />
     <None Include="data\Wall.fbx" />
   </ItemGroup>
   <ItemGroup>

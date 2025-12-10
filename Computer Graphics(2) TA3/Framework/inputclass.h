@@ -47,6 +47,12 @@ public:
 
 	bool IsAnyKeyJustPressed();
 
+	// WASD key check methods for player movement
+	bool IsWPressed();
+	bool IsSPressed();
+	bool IsAPressed();
+	bool IsDPressed();
+
 private:
 	bool ReadKeyboard();
 	bool ReadMouse();

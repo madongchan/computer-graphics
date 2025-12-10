@@ -83,6 +83,18 @@
     <ClCompile Include="SkinShaderClass.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="BaseModel.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="PlayerClass.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="SkinModelClass.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="ModelLoader.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="d3dclass.h">
@@ -154,7 +166,27 @@
     <ClInclude Include="Animation.h">
       <Filter>소스 파일</Filter>
     </ClInclude>
-    <ClInclude Include="SkinShaderClass.h" />
+    <ClInclude Include="BaseModel.h">
+      <Filter>소스 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="ModelStructure.h">
+      <Filter>소스 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="PlayerClass.h">
+      <Filter>소스 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="SkinModelClass.h">
+      <Filter>소스 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="SkinShaderClass.h">
+      <Filter>소스 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="ModelLoader.h">
+      <Filter>소스 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="GameObject.h">
+      <Filter>소스 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="data\phongLightShader.hlsl">
@@ -206,6 +238,18 @@
       <Filter>리소스 파일</Filter>
     </None>
     <None Include="data\skinShader.hlsl">
+      <Filter>리소스 파일</Filter>
+    </None>
+    <None Include="data\Left Walking.fbx">
+      <Filter>리소스 파일</Filter>
+    </None>
+    <None Include="data\Right Walking.fbx">
+      <Filter>리소스 파일</Filter>
+    </None>
+    <None Include="data\Walking.fbx">
+      <Filter>리소스 파일</Filter>
+    </None>
+    <None Include="data\Idle.fbx">
       <Filter>리소스 파일</Filter>
     </None>
   </ItemGroup>

@@ -284,3 +284,40 @@ bool InputClass::IsAnyKeyJustPressed()
 	}
 	return false;
 }
+
+bool InputClass::IsWPressed()
+{
+	// W 키(DIK_W)가 눌려있는지 확인
+	if (m_keyboardState[DIK_W] & 0x80)
+	{
+		return true;
+	}
+	return false;
+}
+bool InputClass::IsSPressed()
+{
+	// S 키(DIK_S)가 눌려있는지 확인
+	if (m_keyboardState[DIK_S] & 0x80)
+	{
+		return true;
+	}
+	return false;
+}
+bool InputClass::IsAPressed()
+{
+	// A 키(DIK_A)가 눌려있는지 확인
+	if (m_keyboardState[DIK_A] & 0x80)
+	{
+		return true;
+	}
+	return false;
+}
+bool InputClass::IsDPressed()
+{
+	// D 키(DIK_D)가 눌려있는지 확인
+	if (m_keyboardState[DIK_D] & 0x80)
+	{
+		return true;
+	}
+	return false;
+}
