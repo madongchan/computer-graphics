@@ -2,28 +2,31 @@
 
 CameraClass::CameraClass()
 {
-    m_position = { 0.0f, 0.0f, 0.0f };
-    m_rotation = { 0.0f, 0.0f, 0.0f };
+    m_position = XMFLOAT3(0.0f, 0.0f, 0.0f);
+    m_rotation = XMFLOAT3(0.0f, 0.0f, 0.0f);
 
-    camPosition = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
-    camTarget = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
+    // 초기 벡터 설정
+    camPosition = XMVectorSet(0.0f, 5.0f, -10.0f, 0.0f);
+    camTarget = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
     camUp = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
-    camRight = DefaultRight;
-    camForward = DefaultForward;
 
     camYaw = 0.0f;
     camPitch = 0.0f;
-    moveLeftRight = 0.0f;
-    moveBackForward = 0.0f;
-    camView = XMMatrixIdentity();
 
-    // 점프 및 중력 관련 초기화
-    m_verticalVelocity = 0.0f;
-    m_gravity = -19.8f;           // 중력 가속도 (음수값)
-    m_jumpForce = 13.8f;           // 점프 초기 속도
-    m_groundLevel = 5.0f;         // 기본 지면 높이
+    // TPS 기본값
+    m_followDist = 6.0f;
+    m_targetOffset = 2.0f; // 플레이어 발바닥 기준 +2.0f 높이 (머리)
+    m_smoothness = 10.0f;
+
+    // 물리 초기화 (기존 유지)
+    m_gravity = -19.8f;
+    m_jumpForce = 13.8f;
+    m_groundLevel = 0.0f;
     m_isGrounded = true;
     m_canJump = true;
+    m_verticalVelocity = 0.0f;
+
+    UpdateViewMatrix();
 }
 
 CameraClass::CameraClass(const CameraClass& other) {}
@@ -31,28 +34,97 @@ CameraClass::~CameraClass() {}
 
 void CameraClass::SetPosition(float x, float y, float z)
 {
-    m_position = { x, y, z };
-    camPosition = XMVectorSet(x, y, z, 0.0f);
+    m_position = XMFLOAT3(x, y, z);
+    camPosition = XMLoadFloat3(&m_position);
 }
 
 void CameraClass::SetRotation(float x, float y, float z)
 {
-    m_rotation = { x, y, z };
+    m_rotation = XMFLOAT3(x, y, z);
+    // 라디안 변환
     camPitch = x * 0.0174532925f;
     camYaw = y * 0.0174532925f;
 }
 
 XMFLOAT3 CameraClass::GetPosition() { return m_position; }
 XMFLOAT3 CameraClass::GetRotation() { return m_rotation; }
-XMVECTOR CameraClass::GetPositionXM() const
-{
-    return camPosition; // 카메라의 현재 위치 (XMVECTOR)
-}
+XMVECTOR CameraClass::GetPositionXM() const { return camPosition; }
+
 void CameraClass::MoveForward(float speed) { moveBackForward += speed; }
 void CameraClass::MoveRight(float speed) { moveLeftRight += speed; }
 void CameraClass::AdjustYaw(float amount) { camYaw += amount; }
-void CameraClass::AdjustPitch(float amount) { camPitch += amount; }
+void CameraClass::AdjustPitch(float amount)
+{
+    camPitch += amount;
 
+    // 상하 각도 제한 (라디안 단위)
+    // 약 -85도 ~ +85도 정도로 제한하여 카메라가 뒤집히는 것을 방지
+    float limit = XM_PIDIV2 * 0.9f; // 90도의 90% 정도까지만 허용
+
+    if (camPitch > limit) camPitch = limit;
+    if (camPitch < -limit) camPitch = -limit;
+}
+// TPS 파라미터 설정
+void CameraClass::SetFollowParameters(float dist, float height, float offset, float smooth)
+{
+    m_followDist = dist;
+    // height 인자는 m_targetOffset으로 대체되어 사용됩니다. (머리 높이)
+    m_targetOffset = offset;
+    m_smoothness = smooth;
+}
+
+// [핵심 수정] TPS 카메라 업데이트 로직
+void CameraClass::UpdateFollowCamera(const XMFLOAT3& targetPos)
+{
+    // 1. 타겟의 피벗 포인트 설정 (플레이어 발바닥 + 오프셋 = 머리 위치)
+    XMVECTOR playerPos = XMLoadFloat3(&targetPos);
+    XMVECTOR focusPoint = XMVectorAdd(playerPos, XMVectorSet(0.0f, m_targetOffset, 0.0f, 0.0f));
+
+    // 2. 회전 행렬 생성 (마우스 입력으로 제어되는 Pitch, Yaw 사용)
+    // main.cpp 처럼 카메라가 타겟 주위를 공전(Orbit)하게 만듭니다.
+    XMMATRIX rotationMatrix = XMMatrixRotationRollPitchYaw(camPitch, camYaw, 0.0f);
+
+    // 3. 카메라 위치 계산 (타겟에서 뒤로 m_followDist 만큼 떨어진 벡터를 회전)
+    // (0, 0, -dist) 벡터를 회전시켜 타겟 뒤쪽 방향을 결정합니다.
+    XMVECTOR lookBackVector = XMVectorSet(0.0f, 0.0f, -m_followDist, 0.0f);
+    XMVECTOR rotatedOffset = XMVector3TransformCoord(lookBackVector, rotationMatrix);
+
+    // 4. 최종 카메라 위치 및 타겟 설정
+    camPosition = XMVectorAdd(focusPoint, rotatedOffset);
+    camTarget = focusPoint; // 카메라는 항상 플레이어의 머리를 바라봄
+
+    // 멤버 변수 동기화
+    XMStoreFloat3(&m_position, camPosition);
+
+    // 5. 뷰 행렬 갱신
+    UpdateViewMatrix();
+}
+
+void CameraClass::UpdateViewMatrix()
+{
+    // 업 벡터는 항상 Y축 (0,1,0)으로 고정하여 카메라가 기울어지는 것을 방지
+    camUp = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+
+    // LookAtLH 함수를 사용하여 뷰 행렬 생성 (CG-05 26p 참조)
+    m_viewMatrix = XMMatrixLookAtLH(camPosition, camTarget, camUp);
+
+    // View 행렬에서 Right, Forward 벡터 추출 (빌보드나 이동 계산용)
+    // View Matrix는 World->View 변환이므로 역행렬(또는 전치행렬)의 행/열을 가져와야 함
+    // 여기서는 간단히 타겟-위치 벡터로 계산
+    camForward = XMVector3Normalize(XMVectorSubtract(camTarget, camPosition));
+    camRight = XMVector3Normalize(XMVector3Cross(camUp, camForward));
+}
+
+void CameraClass::Render()
+{
+    // 이미 UpdateFollowCamera에서 갱신하므로 여기서는 뷰 행렬만 다시 계산하거나 생략 가능
+    // 만약 Free Camera 모드라면 여기서 계산해야 하지만, TPS 모드에서는 UpdateFollowCamera가 주도함
+    UpdateViewMatrix();
+}
+void CameraClass::GetViewMatrix(XMMATRIX& viewMatrix)
+{
+    viewMatrix = m_viewMatrix;
+}
 void CameraClass::Jump()
 {
     // 지면에 있고 점프 가능한 상태에서만 점프 허용
@@ -91,53 +163,4 @@ void CameraClass::CheckGroundCollision()
         camPosition = XMVectorSet(m_position.x, m_position.y, m_position.z, 0.0f);
     }
 }
-
-void CameraClass::UpdateCamera()
-{
-    XMMATRIX camRotationMatrix = XMMatrixRotationRollPitchYaw(camPitch, camYaw, 0);
-    camTarget = XMVector3TransformCoord(DefaultForward, camRotationMatrix);
-    camTarget = XMVector3Normalize(camTarget);
-
-    // 뷰 행렬용 업 벡터
-    XMMATRIX RotateYTempMatrix = XMMatrixRotationY(camYaw);
-    camUp = XMVector3TransformCoord(XMVectorSet(0, 1, 0, 0), RotateYTempMatrix);
-
-    // 최종 뷰 행렬 생성
-    camPosition = XMVectorSet(m_position.x, m_position.y, m_position.z, 0.0f);
-    camTarget = camPosition + camTarget;
-    camView = XMMatrixLookAtLH(camPosition, camTarget, camUp);
-}
-
-
-void CameraClass::Render()
-{
-    UpdateCamera(); // Ensure camera is updated before rendering
-    m_viewMatrix = camView;
-}
-
-void CameraClass::GetViewMatrix(XMMATRIX& viewMatrix)
-{
-    viewMatrix = m_viewMatrix;
-}
-
-// [추가] 현재 입력된 키 값(moveLeftRight 등)을 바탕으로 이동 벡터만 계산
-XMFLOAT3 CameraClass::GetFrameTranslation()
-{
-    // 현재 회전각을 기준으로 방향 벡터 계산
-    XMMATRIX RotateYTempMatrix = XMMatrixRotationY(camYaw);
-    camRight = XMVector3TransformCoord(DefaultRight, RotateYTempMatrix);
-    camForward = XMVector3TransformCoord(DefaultForward, RotateYTempMatrix);
-
-    // 이동 벡터 계산
-    XMVECTOR horizontalMovement = moveLeftRight * camRight + moveBackForward * camForward;
-
-    // 누적된 이동 입력값 초기화 (여기서 초기화해야 중복 이동 안 함)
-    moveLeftRight = 0.0f;
-    moveBackForward = 0.0f;
-
-    XMFLOAT3 result;
-    XMStoreFloat3(&result, horizontalMovement);
-    return result;
-}
-
 

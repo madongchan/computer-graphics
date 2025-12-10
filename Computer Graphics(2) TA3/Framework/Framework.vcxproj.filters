@@ -77,6 +77,12 @@
     <ClCompile Include="fpsclass.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="Animation.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="SkinShaderClass.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="d3dclass.h">
@@ -145,6 +151,10 @@
     <ClInclude Include="fpsclass.h">
       <Filter>소스 파일</Filter>
     </ClInclude>
+    <ClInclude Include="Animation.h">
+      <Filter>소스 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="SkinShaderClass.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="data\phongLightShader.hlsl">
@@ -190,6 +200,12 @@
       <Filter>리소스 파일</Filter>
     </None>
     <None Include="debug.hlsl">
+      <Filter>리소스 파일</Filter>
+    </None>
+    <None Include="data\Player.fbx">
+      <Filter>리소스 파일</Filter>
+    </None>
+    <None Include="data\skinShader.hlsl">
       <Filter>리소스 파일</Filter>
     </None>
   </ItemGroup>

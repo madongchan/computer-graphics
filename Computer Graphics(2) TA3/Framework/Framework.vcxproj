@@ -156,6 +156,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Animation.cpp" />
     <ClCompile Include="bitmapclass.cpp" />
     <ClCompile Include="BumpMapShaderClass.cpp" />
     <ClCompile Include="cameraclass.cpp" />
@@ -169,6 +170,7 @@
     <ClCompile Include="lightshaderclass.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="modelclass.cpp" />
+    <ClCompile Include="SkinShaderClass.cpp" />
     <ClCompile Include="SkyboxClass.cpp" />
     <ClCompile Include="SkyboxShaderClass.cpp" />
     <ClCompile Include="soundclass.cpp" />
@@ -181,6 +183,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AlignedAllocationPolicy.h" />
+    <ClInclude Include="Animation.h" />
     <ClInclude Include="bitmapclass.h" />
     <ClInclude Include="BumpMapShaderClass.h" />
     <ClInclude Include="cameraclass.h" />
@@ -193,6 +196,7 @@
     <ClInclude Include="lightclass.h" />
     <ClInclude Include="lightshaderclass.h" />
     <ClInclude Include="modelclass.h" />
+    <ClInclude Include="SkinShaderClass.h" />
     <ClInclude Include="SkyboxClass.h" />
     <ClInclude Include="SkyboxShaderClass.h" />
     <ClInclude Include="soundclass.h" />
@@ -215,6 +219,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
       </ExcludedFromBuild>
     </None>
+    <None Include="data\Player.fbx" />
     <None Include="data\Tire.fbx" />
     <None Include="data\Tree.fbx" />
     <None Include="data\Wall.fbx" />
@@ -251,6 +256,11 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="debug.hlsl">
+      <FileType>Document</FileType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="data\skinShader.hlsl">
       <FileType>Document</FileType>
     </None>
   </ItemGroup>

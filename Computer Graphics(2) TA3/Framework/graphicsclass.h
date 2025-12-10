@@ -80,6 +80,7 @@ private:
 	CameraClass* m_Camera;
 
 	// 2. 배치된 물체 리스트 (여기에 수십 개의 물체가 담깁니다)
+	GameObject m_Player; // 플레이어 객체 (모델, 위치, 회전 정보 포함)
 	std::vector<GameObject> m_GameObjects;
 	std::vector<GameObject> m_GroundTiles;
 
