@@ -1,5 +1,4 @@
 
-https://github.com/user-attachments/assets/5f0960cd-cd1d-4cf2-8c9f-f3dc67e52c50
 # computer graphics
  컴퓨터 그래픽스 공부 기록
 
